@@ -16,6 +16,11 @@ Arquitectura: **Frontend (Swing + MVC) ↔ sockets ↔ Backend (Lógica + Datos)
 eif206-proyecto2/                 (POM padre, packaging=pom)
 ├── common/                       Modelo, interfaz Service y protocolo de red
 │   └── src/main/java/com/sistema/common/
+│       ├── modelo/               Entidades serializables del dominio
+│       ├── dto/                  Matrices, estadísticas y datos de IA
+│       ├── excepciones/          Errores de dominio
+│       ├── servicio/             Interfaz Service
+│       └── protocolo/            Solicitud, Respuesta, Notificación y utilidades
 ├── backend/                      Servidor sin interfaz gráfica
 │   └── src/main/java/com/sistema/backend/
 │       ├── config/               Lectura de backend.properties
@@ -200,6 +205,112 @@ Pruebas de la fase:
   cambio de clave, alta de funcionarios, reservas, cancelación, estadísticas,
   matrices y protección de catálogos.
 
+## Protocolo de red (Fase 5)
+
+El protocolo vive en `com.sistema.common.protocolo` y lo comparten ambos
+extremos. Se eligió **serialización Java** (`Serializable`) porque:
+
+* `common` no necesita dependencias externas (ni siquiera una biblioteca JSON).
+* Ambos extremos usan exactamente las mismas clases, así que se conservan los
+  tipos del dominio (`LocalDate`, `LocalTime`, enums, listas y modelos).
+* No hay mapeo manual ni riesgo de que un campo se desincronice.
+
+Cada mensaje viaja como **un objeto completo** en el `ObjectOutputStream`. Al
+escribir se hace `flush()` y `reset()`; el lector hace `readObject()` en un
+bucle. El `reset()` evita que un objeto modificado se envíe como referencia al
+anterior.
+
+### Mensajes
+
+| Mensaje | Campos |
+|---|---|
+| `Solicitud` | `id` (String), `operacion` (`Operacion`), `parametros` (`List<Object>`) |
+| `Respuesta` | `id` (String), `exito` (boolean), `resultado` (Object), `error` (`ErrorRemoto`) |
+| `ErrorRemoto` | `codigo` (`CodigoError`), `mensaje` (String) |
+| `Notificacion` | `tipo` (`TipoNotificacion`), `carga` (`CargaNotificacion`) |
+| `CargaNuevaReserva` | `reservaId`, `encargado`, `actividad`, `fecha`, `horaInicio`, `horaFin`, `recursos` |
+
+`Solicitud` valida que la cantidad de parámetros coincida con la operación. Los
+parámetros van en el orden del método y puede haber valores `null`.
+
+### Operaciones
+
+| Operación | Método de `Service` | Parámetros (en orden) |
+|---|---|---|
+| `INICIAR_SESION` | `iniciarSesion` | `id`, `clave` |
+| `CAMBIAR_CLAVE` | `cambiarClave` | `id`, `claveActual`, `nuevaClave`, `confirmacion` |
+| `ALTA_FUNCIONARIO` | `altaFuncionario` | `id`, `nombre`, `telefono` |
+| `MODIFICAR_FUNCIONARIO` | `modificarFuncionario` | `id`, `nombre`, `telefono` |
+| `ELIMINAR_FUNCIONARIO` | `eliminarFuncionario` | `id` |
+| `LISTAR_FUNCIONARIOS` | `listarFuncionarios` | — |
+| `BUSCAR_FUNCIONARIOS` | `buscarFuncionarios` | `criterio` |
+| `ALTA_CATEGORIA` | `altaCategoria` | `descripcion` |
+| `MODIFICAR_CATEGORIA` | `modificarCategoria` | `id`, `nuevoId`, `descripcion` |
+| `ELIMINAR_CATEGORIA` | `eliminarCategoria` | `id` |
+| `LISTAR_CATEGORIAS` | `listarCategorias` | — |
+| `BUSCAR_CATEGORIAS` | `buscarCategorias` | `criterio` |
+| `EXISTE_DESCRIPCION_CATEGORIA` | `existeDescripcionCategoria` | `descripcion` |
+| `ALTA_RECURSO` | `altaRecurso` | `id`, `categoriaId`, `descripcion` |
+| `MODIFICAR_RECURSO` | `modificarRecurso` | `id`, `nuevoId`, `categoriaId`, `descripcion` |
+| `ELIMINAR_RECURSO` | `eliminarRecurso` | `id` |
+| `LISTAR_RECURSOS` | `listarRecursos` | — |
+| `BUSCAR_RECURSOS` | `buscarRecursos` | `criterio` |
+| `FILTRAR_RECURSOS` | `filtrarRecursos` | `categoriaId`, `criterio` |
+| `CREAR_RESERVA` | `crearReserva` | `funcionarioId`, `actividad`, `fecha`, `horaInicio`, `horaFin`, `idsCategorias` |
+| `CANCELAR_RESERVA` | `cancelarReserva` | `idReserva`, `funcionarioId` |
+| `LISTAR_RESERVAS_DE` | `listarReservasDe` | `funcionarioId` |
+| `LISTAR_TODAS_LAS_RESERVAS` | `listarTodasLasReservas` | — |
+| `LISTAR_RESERVAS_ACTIVAS_ENTRE` | `listarReservasActivasEntre` | `desde`, `hasta` |
+| `CONSTRUIR_MATRIZ_ACTIVIDADES` | `construirMatrizActividades` | `fecha` |
+| `CONSTRUIR_MATRIZ_CALENDARIZACION` | `construirMatrizCalendarizacion` | `fecha`, `categoriaId` |
+| `CATEGORIAS_RESERVADAS` | `categoriasReservadas` | `desde`, `hasta` |
+| `ACTIVIDADES_POR_SEMANA` | `actividadesPorSemana` | `desde`, `hasta` |
+| `EXTRAER_DATOS_RESERVA` | `extraerDatosReserva` | `frase` |
+
+### Códigos de error
+
+| Código | Excepción de origen |
+|---|---|
+| `VALIDACION` | `ValidacionException` |
+| `NO_ENCONTRADO` | `NoEncontradoException` |
+| `CONFLICTO` | `ConflictoException` |
+| `AUTENTICACION` | `AutenticacionException` |
+| `ACCESO_DATOS` | `AccesoDatosException` |
+| `CONFIGURACION` | `ConfiguracionException` |
+| `SERVICIO_EXTERNO` | `ServicioExternoException` |
+| `INTERNO` | cualquier otra excepción (mensaje genérico) |
+
+### Flujo de una petición
+
+1. El Proxy genera un `id` con `Protocolo.nuevoId()` y crea `Solicitud.de(...)`.
+2. Envía la solicitud y registra un `CompletableFuture` asociado a ese `id`.
+3. El backend lee, ejecuta el método de `Service` y responde con
+   `Respuesta.ok` o `Respuesta.error`, conservando el `id`.
+4. El hilo lector del Proxy encuentra el futuro por `id` y entrega el resultado;
+   si `exito` es falso, traduce el `CodigoError` a la excepción de dominio.
+
+### Flujo de una notificación
+
+1. El backend crea la reserva con éxito.
+2. Construye `Notificacion.nuevaReserva(reserva)`.
+3. La envía a todos los clientes activos excepto al creador (Fase 6).
+4. El hilo lector del Proxy reconoce la `Notificacion` y la entrega al listener
+   de alertas, sin bloquear la respuesta de la petición original.
+
+### Seguridad de la deserialización
+
+`Protocolo.crearEntrada` instala un `ObjectInputFilter` que solo admite clases
+de `com.sistema.common.*` y de las librerías estándar necesarias
+(`java.lang`, `java.time`, `java.util`, `java.math`). Rechaza cualquier otra
+clase y limita el tamaño del stream (32 MB), la profundidad (100), los arreglos
+(1 000 000 de elementos) y las referencias (1 000 000). Así un cliente
+malicioso no puede deserializar clases arbitrarias.
+
+Pruebas: `common/src/test/java/.../protocolo` cubre la serialización y
+deserialización de `Solicitud`, `Respuesta` (éxito y error), `Notificacion`,
+el mapeo 1:1 con `Service`, los códigos de error, el filtro y la
+serialización de todos los modelos.
+
 ## Base de datos
 
 Nombre de la base: **`proyectoII_reservas`** (MySQL 8.4 LTS, `utf8mb4`).
@@ -237,7 +348,7 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 | 2 | Base de datos MySQL | ✅ Completada |
 | 3 | Backend: capa de Datos (JDBC) | ✅ Completada |
 | 4 | Backend: capa Lógica (Service) | ✅ Completada |
-| 5 | Protocolo de red | ⏳ Pendiente |
+| 5 | Protocolo de red | ✅ Completada |
 | 6 | Servidor multi-hilo y notificaciones | ⏳ Pendiente |
 | 7 | Frontend: conexión y patrón Proxy | ⏳ Pendiente |
 | 8 | Frontend MVC (funcionalidades del P1) | ⏳ Pendiente |
