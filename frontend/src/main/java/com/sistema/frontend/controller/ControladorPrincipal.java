@@ -4,6 +4,7 @@ import com.sistema.common.modelo.Rol;
 import com.sistema.common.modelo.Usuario;
 import com.sistema.common.servicio.Service;
 import com.sistema.frontend.model.ModeloActividades;
+import com.sistema.frontend.model.ModeloAlertas;
 import com.sistema.frontend.model.ModeloCalendarizacion;
 import com.sistema.frontend.model.ModeloCategorias;
 import com.sistema.frontend.model.ModeloFuncionarios;
@@ -17,6 +18,7 @@ import com.sistema.frontend.view.VistaCategorias;
 import com.sistema.frontend.view.VistaFuncionarios;
 import com.sistema.frontend.view.VistaMisReservas;
 import com.sistema.frontend.view.VistaNuevaReserva;
+import com.sistema.frontend.view.PanelAlertas;
 import com.sistema.frontend.view.VistaRecursos;
 import com.sistema.frontend.view.VistaReservas;
 import java.util.ArrayList;
@@ -35,6 +37,7 @@ public final class ControladorPrincipal {
 
     private final VentanaPrincipal ventana;
     private final List<Runnable> cargas = new ArrayList<>();
+    private final ControladorAlertas controladorAlertas;
 
     private Runnable alCambiarClave = () -> { };
     private Runnable alCerrarSesion = () -> { };
@@ -50,6 +53,12 @@ public final class ControladorPrincipal {
         }
 
         this.ventana = new VentanaPrincipal(usuario);
+
+        ModeloAlertas modeloAlertas = new ModeloAlertas();
+        PanelAlertas panelAlertas = new PanelAlertas(modeloAlertas);
+        this.controladorAlertas = new ControladorAlertas(modeloAlertas, panelAlertas);
+        ventana.agregarPanelAlertas(panelAlertas);
+
         if (usuario.getRol() == Rol.ADMINISTRADOR) {
             armarAdministracion(servicio, ejecutor);
         } else {
@@ -132,6 +141,11 @@ public final class ControladorPrincipal {
 
     public VentanaPrincipal getVentana() {
         return ventana;
+    }
+
+    /** Controlador que el orquestador registra como escucha del proxy. */
+    public ControladorAlertas getControladorAlertas() {
+        return controladorAlertas;
     }
 
     public void alCambiarClave(Runnable accion) {

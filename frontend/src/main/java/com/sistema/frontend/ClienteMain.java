@@ -50,7 +50,7 @@ public final class ClienteMain {
                 + " (protocolo v" + Protocolo.VERSION + ").");
 
         ControladorAplicacion aplicacion =
-                new ControladorAplicacion(proxy, new EjecutorSwing(), proxy);
+                new ControladorAplicacion(proxy, new EjecutorSwing(), proxy, proxy);
         Runtime.getRuntime().addShutdownHook(new Thread(proxy::close, "cierre-proxy"));
         SwingUtilities.invokeLater(aplicacion::iniciar);
     }

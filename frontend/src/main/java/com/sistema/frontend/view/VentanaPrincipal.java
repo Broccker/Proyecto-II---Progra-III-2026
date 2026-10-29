@@ -28,6 +28,7 @@ public final class VentanaPrincipal extends JFrame {
 
     private final JTabbedPane pestanas = new JTabbedPane();
     private final JLabel estadoSesion = new JLabel();
+    private JComponent panelAlertas;
 
     private Runnable alCambiarClave;
     private Runnable alCerrarSesion;
@@ -87,6 +88,26 @@ public final class VentanaPrincipal extends JFrame {
     /** Agrega una pestaña con su icono opcional. */
     public void agregarPestana(String titulo, String icono, JComponent contenido) {
         pestanas.addTab(titulo, Iconos.pestana(icono), contenido);
+    }
+
+    /**
+     * Coloca el panel de alertas al lado derecho, fuera de las pestañas y
+     * siempre visible. Solo puede haber uno.
+     */
+    public void agregarPanelAlertas(JComponent panel) {
+        if (panelAlertas != null) {
+            remove(panelAlertas);
+        }
+        panelAlertas = panel;
+        if (panel != null) {
+            add(panel, BorderLayout.EAST);
+            revalidate();
+            repaint();
+        }
+    }
+
+    public JComponent getPanelAlertas() {
+        return panelAlertas;
     }
 
     public void alCambiarClave(Runnable accion) {

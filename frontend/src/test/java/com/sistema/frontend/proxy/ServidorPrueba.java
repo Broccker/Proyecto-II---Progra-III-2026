@@ -97,6 +97,18 @@ final class ServidorPrueba implements AutoCloseable {
     }
 
     /**
+     * Envía una notificación a un cliente concreto, por orden de conexión.
+     * Sirve para simular que el servidor excluye al creador de la reserva.
+     */
+    void enviarA(int indice, Notificacion notificacion) throws IOException {
+        List<Conexion> copia = List.copyOf(conexiones);
+        if (indice < 0 || indice >= copia.size()) {
+            throw new IllegalArgumentException("No hay una conexión de prueba en el índice " + indice + ".");
+        }
+        copia.get(indice).enviar(notificacion);
+    }
+
+    /**
      * Cierra las conexiones activas sin detener el servidor, para simular una
      * caída de la red.
      */

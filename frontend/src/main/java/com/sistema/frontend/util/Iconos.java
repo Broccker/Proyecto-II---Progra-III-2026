@@ -31,6 +31,16 @@ public final class Iconos {
         return cargar("botones/" + nombre, TAMANO_ICONO_BOTON);
     }
 
+    /**
+     * Icono de carpeta del sistema para la acción "Ver".
+     *
+     * <p>Lo provee el look and feel; si no estuviera disponible, la vista
+     * muestra el texto "Ver" en su lugar.</p>
+     */
+    public static Icon carpeta() {
+        return javax.swing.UIManager.getIcon("FileView.directoryIcon");
+    }
+
     private static Icon cargar(String subruta, int tamanio) {
         URL recurso = Iconos.class.getResource(RUTA_ICONOS + subruta + "_icon.png");
         if (recurso == null) {

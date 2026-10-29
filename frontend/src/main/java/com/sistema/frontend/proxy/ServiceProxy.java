@@ -54,7 +54,7 @@ import java.util.logging.Logger;
  * en Swing deben ejecutarse fuera del hilo de eventos (por ejemplo, con
  * {@code SwingWorker}).</p>
  */
-public final class ServiceProxy implements Service, AutoCloseable {
+public final class ServiceProxy implements Service, FuenteNotificaciones, AutoCloseable {
 
     private static final Logger LOG = Logger.getLogger(ServiceProxy.class.getName());
 
@@ -103,6 +103,7 @@ public final class ServiceProxy implements Service, AutoCloseable {
      * Registra un receptor de notificaciones. Es seguro llamarlo desde el
      * hilo de la interfaz mientras otro hilo difunde.
      */
+    @Override
     public void agregarEscucha(EscuchaNotificaciones escucha) {
         Objects.requireNonNull(escucha, "La escucha es obligatoria.");
         escuchas.add(escucha);
@@ -111,6 +112,7 @@ public final class ServiceProxy implements Service, AutoCloseable {
     /**
      * Quita un receptor previamente registrado.
      */
+    @Override
     public void quitarEscucha(EscuchaNotificaciones escucha) {
         escuchas.remove(escucha);
     }
@@ -118,6 +120,7 @@ public final class ServiceProxy implements Service, AutoCloseable {
     /**
      * Indica si la conexión sigue abierta y utilizable.
      */
+    @Override
     public boolean estaConectado() {
         return !cerrado.get() && conectado.get();
     }

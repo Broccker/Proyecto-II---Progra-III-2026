@@ -31,10 +31,10 @@ eif206-proyecto2/                 (POM padre, packaging=pom)
 │   └── src/main/java/com/sistema/frontend/
 │       ├── config/               Lectura de frontend.properties
 │       ├── controller/           Orquestación, ejecución asíncrona y errores
-│       ├── model/                Estado de cada módulo y sesión activa
+│       ├── model/                Estado de cada módulo, alertas y sesión activa
 │       ├── proxy/                ServiceProxy y transporte por sockets
 │       ├── util/                 Iconos, PDF y reportes
-│       └── view/                 Ventana principal, vistas y componentes
+│       └── view/                 Ventana principal, vistas, panel de alertas y componentes
 ├── sql/                          schema.sql y datos_iniciales.sql
 ├── .run/                         Run Configurations compartidas de IntelliJ
 └── pom.xml
@@ -422,8 +422,8 @@ las vistas.
    `ExcepcionRed` con un mensaje apto para el usuario.
 
 Una `Notificacion` que llega por el mismo socket no completa ningún futuro: se
-reenvía a las `EscuchaNotificaciones` registradas, desde el hilo lector. La
-Fase 9 se encargará de pasarla al hilo de eventos de Swing.
+reenvía a las `EscuchaNotificaciones` registradas, desde el hilo lector. El
+controlador de alertas (Fase 9) la pasa al hilo de eventos de Swing.
 
 ### Configuración y ejecución
 
@@ -565,6 +565,78 @@ Pruebas de la fase:
   Controlador → Vista** contra un servidor que habla el protocolo real (sin
   MySQL): login y alta de funcionario con la tabla actualizada.
 
+## Frontend: área de alertas (Fase 9)
+
+El panel de alertas está al **lado derecho** de la ventana principal, fuera del
+`JTabbedPane` y siempre visible. Muestra, solo de forma informativa, las reservas
+que **otros** usuarios registran mientras la sesión está activa. No se persiste
+nada: al cerrar sesión las alertas desaparecen.
+
+| Clase | Responsabilidad |
+|---|---|
+| `ModeloAlertas` | Lista local de alertas, con deduplicación por reserva. Sincronizada porque la notificación llega por el hilo lector. |
+| `Alerta` | Valor inmutable con los datos de la reserva y el texto `Encargado - Actividad`. |
+| `PanelAlertas` | Tabla con columnas **Actividad**, **Ver** y **Desc.**; diálogo de detalle y confirmación de descarte. No conoce el backend. |
+| `ControladorAlertas` | Implementa `EscuchaNotificaciones`: recibe la notificación, la pasa al hilo de eventos y atiende Ver/Descartar. |
+| `HiloInterfaz` | Abstracción del despacho a Swing (`SwingUtilities::invokeLater`); las pruebas la sustituyen por ejecución directa. |
+| `FuenteNotificaciones` | Contrato mínimo del proxy para registrar/quitar escuchas sin acoplar los controladores a los sockets. |
+
+### Flujo de una alerta
+
+1. El backend crea la reserva y `RegistroClientes` difunde una `Notificacion`
+   con `CargaNuevaReserva` a todos los clientes **menos la conexión de origen**;
+   por eso el creador no recibe su propia alerta.
+2. El hilo lector del proxy entrega la notificación a `ControladorAlertas`,
+   registrado por `ControladorAplicacion` al abrir la ventana principal.
+3. El controlador la encola y programa **un único** volcado al hilo de eventos.
+   Si llegan muchas alertas seguidas se drenan juntas en un solo refresco, sin
+   bloquear ni el lector ni la interfaz.
+4. El modelo agrega la alerta (ignorando reservas repetidas) y el panel
+   actualiza la tabla.
+
+`alPerderConexion` avisa una sola vez y el pie del panel queda en "Sin conexión
+con el servidor"; las peticiones posteriores fallan con `ExcepcionRed` y los
+controladores de módulo muestran el error.
+
+### Ver y descartar
+
+* **Ver** (ícono de carpeta, o doble clic en la actividad) abre un diálogo modal
+  titulado con la actividad y muestra **Encargado, Fecha, Desde, Hasta y
+  Recursos**, con botón **OK**.
+* **Desc.** (ícono rojo) pide confirmación con el nombre de la actividad. Si se
+  confirma, la alerta se quita del modelo y de la tabla. **No se envía ninguna
+  petición al backend**: el descarte es solo local.
+* El controlador no abre diálogos mientras procesa la notificación: el trabajo
+  pesado ya está en el hilo de eventos, así que una alerta que llega con un
+  diálogo abierto se repinta cuando el diálogo lo permite, sin corromper el
+  estado de Swing.
+
+Las alertas viven en el `ControladorPrincipal` de cada sesión: al cerrar sesión
+se quita la escucha del proxy y se llama a `vaciar()`, de modo que la siguiente
+sesión empieza sin alertas.
+
+### Probar con dos frontends
+
+1. Arranque MySQL y el backend: `mvn -pl backend -am exec:java`.
+2. Abra dos frontends: `mvn -pl frontend -am exec:java` (dos terminales).
+3. Ingrese en uno con `222/222` y en el otro con `333/333`.
+4. Cree una reserva como `222`; en el frontend de `333` aparece la alerta
+   `Ana Pérez - <actividad>` al instante. El de `222` no la recibe.
+5. En `333`, use **Ver** y **Desc.**; la reserva no cambia en el backend.
+
+Pruebas de la fase:
+
+* `AlertaTest`, `ModeloAlertasTest`: formato del texto, orden, deduplicación,
+  eliminación y vaciado.
+* `ControladorAlertasTest`: llegada de notificaciones, ráfagas agrupadas en un
+  solo refresco, Ver, Descarte confirmado/cancelado, fila inexistente y aviso
+  único de desconexión.
+* `PanelAlertasTest`: render de la tabla, conteo en el pie, clic en las columnas
+  **Ver** y **Desc.**, texto del detalle y estado de desconexión.
+* `AlertasIT`: dos frontends contra un servidor que habla el protocolo real. Una
+  reserva creada en un cliente llega solo al otro; Ver y Desc. no generan
+  tráfico; la caída de la conexión se informa en el panel.
+
 ## Base de datos
 
 Nombre de la base: **`proyectoII_reservas`** (MySQL 8.4 LTS, `utf8mb4`).
@@ -606,7 +678,7 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 | 6 | Servidor multi-hilo y notificaciones | ✅ Completada |
 | 7 | Frontend: conexión y patrón Proxy | ✅ Completada |
 | 8 | Frontend MVC (funcionalidades del P1) | ✅ Completada |
-| 9 | Área de Alertas | ⏳ Pendiente |
+| 9 | Área de Alertas | ✅ Completada |
 | 10 | Estadísticas | ⏳ Pendiente |
 | 11 | Validación y errores transversal | ⏳ Pendiente |
 | 12 | Pruebas JUnit 5 | ⏳ Pendiente |

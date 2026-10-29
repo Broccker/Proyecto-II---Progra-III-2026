@@ -3,6 +3,7 @@ package com.sistema.frontend.controller;
 import com.sistema.common.modelo.Usuario;
 import com.sistema.common.servicio.Service;
 import com.sistema.frontend.model.Sesion;
+import com.sistema.frontend.proxy.FuenteNotificaciones;
 import com.sistema.frontend.view.VistaCambiarClave;
 import com.sistema.frontend.view.VistaLogin;
 import java.awt.Frame;
@@ -24,16 +25,20 @@ public final class ControladorAplicacion {
     private final Service servicio;
     private final EjecutorTareas ejecutor;
     private final AutoCloseable conexion;
+    private final FuenteNotificaciones notificaciones;
     private final Sesion sesion = new Sesion();
 
     private JFrame marcoLogin;
     private ControladorPrincipal principal;
 
     public ControladorAplicacion(Service servicio, EjecutorTareas ejecutor,
-                                 AutoCloseable conexion) {
+                                 AutoCloseable conexion,
+                                 FuenteNotificaciones notificaciones) {
         this.servicio = Objects.requireNonNull(servicio, "El servicio es obligatorio.");
         this.ejecutor = Objects.requireNonNull(ejecutor, "El ejecutor es obligatorio.");
         this.conexion = Objects.requireNonNull(conexion, "La conexión es obligatoria.");
+        this.notificaciones = Objects.requireNonNull(notificaciones,
+                "La fuente de notificaciones es obligatoria.");
     }
 
     /** Punto de entrada de la interfaz; debe invocarse en el hilo de eventos. */
@@ -68,6 +73,7 @@ public final class ControladorAplicacion {
         principal.alCambiarClave(() -> abrirCambioClave(usuario.getId(), false));
         principal.alCerrarSesion(this::cerrarSesion);
         principal.alSalir(this::salir);
+        notificaciones.agregarEscucha(principal.getControladorAlertas());
         principal.mostrar();
     }
 
@@ -99,6 +105,7 @@ public final class ControladorAplicacion {
     }
 
     private void cerrarSesion() {
+        descartarAlertas();
         if (principal != null) {
             principal.cerrar();
             principal = null;
@@ -116,6 +123,7 @@ public final class ControladorAplicacion {
 
     /** Cierra ventanas y conexión. Es idempotente. */
     public void cerrarTodo() {
+        descartarAlertas();
         if (principal != null) {
             principal.cerrar();
             principal = null;
@@ -127,6 +135,19 @@ public final class ControladorAplicacion {
         } catch (Exception e) {
             System.err.println("[frontend] No se pudo cerrar la conexión: " + e.getMessage());
         }
+    }
+
+    /**
+     * Deja de escuchar notificaciones y borra las alertas de la sesión. Las
+     * alertas no se persisten: al cerrar sesión se pierden.
+     */
+    private void descartarAlertas() {
+        ControladorPrincipal actual = principal;
+        if (actual == null) {
+            return;
+        }
+        notificaciones.quitarEscucha(actual.getControladorAlertas());
+        actual.getControladorAlertas().vaciar();
     }
 
     private void salir() {
