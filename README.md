@@ -18,7 +18,8 @@ eif206-proyecto2/                 (POM padre, packaging=pom)
 │   └── src/main/java/com/sistema/common/
 ├── backend/                      Servidor sin interfaz gráfica
 │   └── src/main/java/com/sistema/backend/
-│       ├── data/                 DAOs JDBC + pool de conexiones
+│       ├── config/               Lectura de backend.properties
+│       ├── data/                 DAOs JDBC + pool de conexiones (HikariCP)
 │       ├── logic/                ServiceImpl (reglas de negocio)
 │       └── server/               ServerSocket, ClientHandler, broadcast
 ├── frontend/                     Cliente Swing
@@ -57,6 +58,18 @@ mvn -DskipTests package
 Los tests unitarios se llaman `*Test` y los de integración `*IT`
 (Surefire y Failsafe respectivamente).
 
+Las pruebas de integración crean la base **`proyectoII_reservas_test`** a partir
+del mismo `sql/schema.sql` (el POM del backend lo copia a los recursos de prueba),
+así que siempre usan el esquema real sin tocar la base de desarrollo. Requieren
+MySQL activo; si no está disponible, se **omiten** con un mensaje en el reporte
+en lugar de romper la compilación de quien solo trabaja en el frontend.
+
+Para ejecutar solo las pruebas de integración del backend:
+
+```bash
+mvn -pl backend -am verify
+```
+
 ## Ejecutar en IntelliJ IDEA
 
 1. `File → Open` y seleccionar el `pom.xml` de la raíz; importar los tres módulos.
@@ -79,9 +92,58 @@ java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar
 ## Configuración y credenciales
 
 * `backend/src/main/resources/backend.properties` — URL, usuario y clave de MySQL,
-  puerto del servidor y configuración del servicio de IA.
-* `frontend/src/main/resources/frontend.properties` — host y puerto del backend.
+  puerto del servidor y tamaño del pool.
+* `frontend/src/main/resources/frontend.properties` — host y puerto del backend (Fase 7).
 * Ambos archivos están en `.gitignore`; solo se versionan los `*.example`.
+
+Para preparar el backend por primera vez:
+
+```bash
+cp backend/src/main/resources/backend.properties.example \
+   backend/src/main/resources/backend.properties
+```
+
+Luego ajuste `bd.url`, `bd.usuario` y `bd.clave`. La clase
+`ConfiguracionBackend` busca el archivo en este orden:
+
+1. `-Dbackend.config=/ruta/backend.properties`
+2. La variable de entorno `BACKEND_CONFIG`
+3. El recurso `/backend.properties` del classpath
+
+Además, `-Dbd.url`, `-Dbd.usuario`, `-Dbd.clave`, `-Dbd.pool.tamano` y
+`-Dservidor.puerto` sobrescriben el archivo, útil para equipos de integración
+sin editar credenciales versionadas.
+
+## Capa de datos (Fase 3)
+
+El módulo `backend` es el único que conoce JDBC y MySQL.
+
+| Clase | Responsabilidad |
+|---|---|
+| `config.ConfiguracionBackend` | Lee y valida `backend.properties` |
+| `data.FuenteDatos` | Pool **HikariCP**; entrega conexiones y las devuelve al pool |
+| `data.DAOBase` | Transacciones, `PreparedStatement` y traducción de `SQLException` |
+| `data.UsuarioDAO` | Usuarios, funcionarios, claves BCrypt y búsquedas |
+| `data.CategoriaRecursoDAO` | CRUD de categorías y generación de `CAT-000001` |
+| `data.RecursoDAO` | CRUD de recursos con su categoría |
+| `data.ReservaDAO` | Reservas, disponibilidad, cancelación y conteos de estadísticas |
+
+Decisiones de la capa:
+
+* **HikariCP** en lugar de un pool propio: reutiliza y valida conexiones,
+  limita el máximo y evita abrir una conexión por operación. Su configuración
+  es mínima (URL, usuario, clave y tamaño).
+* **Todas las consultas usan `PreparedStatement`** y `try-with-resources`;
+  ningún valor se concatena en el SQL.
+* **Crear una reserva es atómico**: se bloquean los recursos con
+  `SELECT ... FOR UPDATE`, se comprueban los traslapes y se insertan la reserva
+  y su detalle en una sola transacción. Si algo falla, no queda nada a medias.
+* **Los errores de MySQL se traducen** a `ValidacionException`,
+  `ConflictoException`, `NoEncontradoException` o `AccesoDatosException`
+  (definidas en `common`), de modo que la lógica y el frontend no dependen
+  del driver.
+* Los conteos de estadísticas (`ConteoCategoria`, `ConteoSemana`) se calculan
+  con `COUNT`/`GROUP BY` en el backend y se devuelven como DTO serializables.
 
 ## Base de datos
 
@@ -118,7 +180,7 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 |---|---|---|
 | 1 | Estructura Maven multi-módulo | ✅ Completada |
 | 2 | Base de datos MySQL | ✅ Completada |
-| 3 | Backend: capa de Datos (JDBC) | ⏳ Pendiente |
+| 3 | Backend: capa de Datos (JDBC) | ✅ Completada |
 | 4 | Backend: capa Lógica (Service) | ⏳ Pendiente |
 | 5 | Protocolo de red | ⏳ Pendiente |
 | 6 | Servidor multi-hilo y notificaciones | ⏳ Pendiente |

@@ -148,3 +148,11 @@ Sobre una instalación limpia de MySQL 8.4.13 se comprobó:
   hora de fin anterior a la de inicio, borrado de categoría/recurso en uso,
   descripción de categoría duplicada, recurso con categoría inexistente,
   detalle duplicado y reserva con funcionario inexistente.
+
+## Pruebas automatizadas
+
+Las pruebas de integración (`backend/src/test/.../*IT.java`) recrean una base
+aparte, **`proyectoII_reservas_test`**, usando este mismo `schema.sql`, y
+comprueban los DAO: CRUD, claves duplicadas, restricciones de clave foránea,
+atomicidad al crear reservas, detección de traslapes y conteos de estadísticas.
+La base de desarrollo `proyectoII_reservas` no se modifica durante las pruebas.

@@ -1,0 +1,17 @@
+# =====================================================================
+# Configuración del Backend (plantilla)
+#
+# Copie este archivo como backend.properties y ajuste los valores.
+# backend.properties está en .gitignore: nunca suba credenciales reales.
+# =====================================================================
+
+# Conexión a MySQL
+bd.url=jdbc:mysql://127.0.0.1:3306/proyectoII_reservas?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+bd.usuario=root
+bd.clave=root
+
+# Pool de conexiones (HikariCP)
+bd.pool.tamano=10
+
+# Puerto donde escuchará el servidor de sockets (Fase 6)
+servidor.puerto=5000
