@@ -27,10 +27,14 @@ eif206-proyecto2/                 (POM padre, packaging=pom)
 │       ├── data/                 DAOs JDBC + pool de conexiones (HikariCP)
 │       ├── logic/                ServiceImpl (reglas de negocio) e integración con IA
 │       └── server/               Servidor, ManejadorCliente y RegistroClientes
-├── frontend/                     Cliente Swing
+├── frontend/                     Cliente Swing (MVC)
 │   └── src/main/java/com/sistema/frontend/
 │       ├── config/               Lectura de frontend.properties
-│       └── proxy/                ServiceProxy y transporte por sockets
+│       ├── controller/           Orquestación, ejecución asíncrona y errores
+│       ├── model/                Estado de cada módulo y sesión activa
+│       ├── proxy/                ServiceProxy y transporte por sockets
+│       ├── util/                 Iconos, PDF y reportes
+│       └── view/                 Ventana principal, vistas y componentes
 ├── sql/                          schema.sql y datos_iniciales.sql
 ├── .run/                         Run Configurations compartidas de IntelliJ
 └── pom.xml
@@ -438,8 +442,8 @@ mvn -pl frontend -am exec:java -Dexec.args="192.168.1.20 5000"
 java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar 192.168.1.20 5000
 ```
 
-El punto de entrada comprueba la conexión, informa el destino y cierra; la
-ventana de login se conecta en la Fase 8.
+El punto de entrada abre la conexión, arranca el proxy y muestra la ventana de
+login; el resto del ciclo de vida lo coordina `ControladorAplicacion` (Fase 8).
 
 ### Separación de capas
 
@@ -465,6 +469,101 @@ Pruebas de la fase:
 ```bash
 mvn -pl frontend -am -Dit.test=ProxyBackendRealIT verify
 ```
+
+## Frontend: MVC y funcionalidades (Fase 8)
+
+La interfaz replica las funcionalidades del Proyecto #1 sobre la arquitectura
+distribuida. El **MVC es estricto**: la vista no conoce el proxy ni las reglas de
+negocio, el controlador coordina y el modelo guarda el estado del módulo.
+
+| Capa | Paquete | Responsabilidad |
+|---|---|---|
+| Vista | `frontend.view` | Solo dibuja el modelo y expone las acciones del usuario (`alBuscar`, `alGuardar`, `alCancelar`…). No llama a `Service`. |
+| Controlador | `frontend.controller` | Valida lo básico, decide alta o modificación, invoca `Service` fuera del hilo de eventos y actualiza el modelo. |
+| Modelo | `frontend.model` | Estado del módulo: listado, criterio de búsqueda, selección y sesión activa. |
+
+```text
+frontend/src/main/java/com/sistema/frontend/
+├── controller/     ControladorAplicacion, ControladorPrincipal y un controlador por módulo
+├── model/          ModeloFuncionarios, ModeloCategorias, ModeloRecursos, ModeloReservas,
+│                   ModeloCalendarizacion, ModeloActividades y Sesion
+├── view/           VentanaPrincipal, vistas de login y de cada módulo, Dialogos
+│   └── componentes/ ModeloTabla, SelectorFecha, SelectorHora, SelectorArchivoPdf
+└── util/           Iconos, GeneradorPDF y Reportes
+```
+
+### Flujo de una acción
+
+1. El usuario pulsa **Guardar**; la vista ejecuta la acción registrada y entrega
+   los textos escritos (`getId()`, `getNombre()`, …).
+2. El controlador valida los campos obligatorios. Si falta algo muestra una
+   advertencia y **no** consulta al backend.
+3. El controlador entrega el trabajo a `EjecutorTareas`. En producción
+   `EjecutorSwing` usa un `SwingWorker`: la llamada al proxy corre en un hilo de
+   trabajo y los callbacks vuelven al hilo de eventos, así la ventana no se
+   congela mientras se espera la respuesta.
+4. Si el backend acepta, el controlador actualiza el modelo, pide `actualizar()`
+   a la vista y recarga el listado. Si falla, `Errores.mensaje(...)` muestra el
+   texto de la excepción de dominio y el formulario conserva los datos.
+
+La validación del frontend es solo para dar respuesta inmediata: el backend
+vuelve a validar longitudes, formato, claves y conflictos. Nunca se sustituye.
+
+### Módulos y pestañas
+
+| Rol | Pestañas |
+|---|---|
+| Administrador | Funcionarios, Categorías, Recursos, Calendarización, Actividades |
+| Funcionario | Reservas (nueva + mis reservas), Calendarización, Actividades |
+
+| Módulo | Controlador | Operaciones |
+|---|---|---|
+| Ingreso | `ControladorLogin` | Autenticación y registro de la sesión. |
+| Cambio de clave | `ControladorCambiarClave` | Verifica la confirmación y llama a `cambiarClave`. |
+| Funcionarios | `ControladorFuncionarios` | Buscar, crear, modificar, eliminar y PDF. |
+| Categorías | `ControladorCategorias` | Buscar, crear (id asignado por el backend), modificar, eliminar y PDF. |
+| Recursos | `ControladorRecursos` | Filtro por categoría y texto, CRUD y PDF. |
+| Reservas | `ControladorReservas` | Alta con extracción por IA, historial del funcionario, cancelación y PDF. |
+| Calendarización | `ControladorCalendarizacion` | Matriz de 24 horas por recurso de una categoría y exportación. |
+| Actividades | `ControladorActividades` | Matriz semanal de 24 horas por 7 días y exportación. |
+
+`ControladorAplicacion` es el único que crea ventanas: muestra el login, abre la
+ventana principal según el rol, gestiona el diálogo de cambio de clave, el cierre
+de sesión y la salida. `ControladorPrincipal` arma las pestañas e inyecta en cada
+una su modelo, su vista y el mismo `Service`.
+
+Los reportes se generan en el frontend con OpenPDF (`GeneradorPDF` + `Reportes`);
+el backend no produce archivos. Los iconos del P1 se copiaron a
+`frontend/src/main/resources/Iconos/` y se cargan con `util.Iconos`, que
+devuelve `null` si el recurso no está, sin romper la vista.
+
+### Ejecución
+
+Con el backend escuchando en el puerto 5000 y la base cargada:
+
+```bash
+mvn -pl frontend -am exec:java
+# o
+java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar
+```
+
+Ingrese con `111/111` (administrador) o `222/222` (funcionario). El menú
+**Sesión** permite cambiar la clave o cerrar sesión.
+
+Pruebas de la fase:
+
+* `ControladorLoginTest`, `ControladorCambiarClaveTest`: validación local,
+  registro de la sesión y fallos del backend.
+* `ControladorFuncionariosTest`, `ControladorCategoriasTest`,
+  `ControladorRecursosTest`, `ControladorReservasTest`,
+  `ControladorCalendarizacionTest`, `ControladorActividadesTest`: acciones de la
+  vista → controlador → `Service` simulado (Mockito) y vuelta al modelo y a la
+  tabla.
+* `ErroresTest`, `EjecutorSwingTest`, `SesionTest`: traducción de errores,
+  ejecución fuera del EDT y estado de la sesión.
+* `FlujoMVCIT`: flujo completo **Vista → Controlador → Proxy → Servidor →
+  Controlador → Vista** contra un servidor que habla el protocolo real (sin
+  MySQL): login y alta de funcionario con la tabla actualizada.
 
 ## Base de datos
 
@@ -506,7 +605,7 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 | 5 | Protocolo de red | ✅ Completada |
 | 6 | Servidor multi-hilo y notificaciones | ✅ Completada |
 | 7 | Frontend: conexión y patrón Proxy | ✅ Completada |
-| 8 | Frontend MVC (funcionalidades del P1) | ⏳ Pendiente |
+| 8 | Frontend MVC (funcionalidades del P1) | ✅ Completada |
 | 9 | Área de Alertas | ⏳ Pendiente |
 | 10 | Estadísticas | ⏳ Pendiente |
 | 11 | Validación y errores transversal | ⏳ Pendiente |

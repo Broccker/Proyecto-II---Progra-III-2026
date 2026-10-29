@@ -2,6 +2,8 @@ package com.sistema.frontend;
 
 import com.sistema.common.protocolo.Protocolo;
 import com.sistema.frontend.config.ConfiguracionFrontend;
+import com.sistema.frontend.controller.ControladorAplicacion;
+import com.sistema.frontend.controller.EjecutorSwing;
 import com.sistema.frontend.proxy.ExcepcionRed;
 import com.sistema.frontend.proxy.ServiceProxy;
 import java.awt.GraphicsEnvironment;
@@ -12,9 +14,9 @@ import javax.swing.UIManager;
 /**
  * Punto de entrada del proceso Frontend (cliente Swing).
  *
- * <p>En la Fase 7 comprueba la conexión con el backend y deja el
- * {@link ServiceProxy} listo para inyectarse. En la Fase 8 abrirá la ventana
- * de login usando ese mismo proxy como {@code Service}.</p>
+ * <p>Abre la conexión con el backend, arranca el {@link ServiceProxy} y
+ * entrega el control a {@link ControladorAplicacion}, que muestra el login y,
+ * tras autenticar, la ventana principal.</p>
  *
  * <p>Uso: {@code ClienteMain [host] [puerto]}. Sin argumentos toma el destino
  * de {@code frontend.properties} (o de los valores por defecto).</p>
@@ -35,15 +37,22 @@ public final class ClienteMain {
             return;
         }
 
-        try (ServiceProxy proxy = new ServiceProxy(configuracion)) {
-            System.out.println("[frontend] Conectado al backend "
-                    + configuracion.host() + ":" + configuracion.puerto()
-                    + " (protocolo v" + Protocolo.VERSION + ").");
-            System.out.println("[frontend] La ventana de login se habilita en la Fase 8.");
-            // Fase 8: abrir aquí la ventana de login con `proxy` inyectado como Service.
+        ServiceProxy proxy;
+        try {
+            proxy = new ServiceProxy(configuracion);
         } catch (ExcepcionRed e) {
             reportar("Sin conexión con el backend", e.getMessage());
+            return;
         }
+
+        System.out.println("[frontend] Conectado al backend "
+                + configuracion.host() + ":" + configuracion.puerto()
+                + " (protocolo v" + Protocolo.VERSION + ").");
+
+        ControladorAplicacion aplicacion =
+                new ControladorAplicacion(proxy, new EjecutorSwing(), proxy);
+        Runtime.getRuntime().addShutdownHook(new Thread(proxy::close, "cierre-proxy"));
+        SwingUtilities.invokeLater(aplicacion::iniciar);
     }
 
     private static void instalarLookAndFeel() {
