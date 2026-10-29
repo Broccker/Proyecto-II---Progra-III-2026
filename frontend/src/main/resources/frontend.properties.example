@@ -1,0 +1,20 @@
+# =====================================================================
+# Configuración del Frontend (plantilla)
+#
+# Copie este archivo como frontend.properties si necesita cambiar el
+# destino del backend. frontend.properties está en .gitignore.
+#
+# Este módulo NO contiene credenciales de base de datos ni de IA: solo
+# sabe a qué host y puerto conectarse.
+# =====================================================================
+
+# Host donde corre el proceso Backend.
+# Use 127.0.0.1 si el servidor está en la misma máquina; la IP o el
+# nombre del equipo si está en otra.
+servidor.host=127.0.0.1
+
+# Puerto del servidor (debe coincidir con servidor.puerto del backend).
+servidor.puerto=5000
+
+# Tiempo máximo de espera de cada respuesta, en milisegundos.
+proxy.timeout.ms=15000

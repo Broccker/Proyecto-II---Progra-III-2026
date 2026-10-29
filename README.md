@@ -29,10 +29,8 @@ eif206-proyecto2/                 (POM padre, packaging=pom)
 │       └── server/               Servidor, ManejadorCliente y RegistroClientes
 ├── frontend/                     Cliente Swing
 │   └── src/main/java/com/sistema/frontend/
-│       ├── proxy/                ServiceProxy (implementa Service vía sockets)
-│       ├── model/                Modelos de la vista (MVC)
-│       ├── view/                 Vistas Swing (incluye panel de Alertas)
-│       └── controller/           Controladores MVC
+│       ├── config/               Lectura de frontend.properties
+│       └── proxy/                ServiceProxy y transporte por sockets
 ├── sql/                          schema.sql y datos_iniciales.sql
 ├── .run/                         Run Configurations compartidas de IntelliJ
 └── pom.xml
@@ -98,7 +96,9 @@ java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar
 
 * `backend/src/main/resources/backend.properties` — URL, usuario y clave de MySQL,
   puerto del servidor, tamaño del pool y datos del servicio de IA.
-* `frontend/src/main/resources/frontend.properties` — host y puerto del backend (Fase 7).
+* `frontend/src/main/resources/frontend.properties` — host, puerto del backend y
+  tiempo de espera del proxy. Es **opcional**: sin archivo usa `127.0.0.1:5000`
+  y 15 s. Nunca contiene credenciales de base de datos ni de IA.
 * Ambos archivos están en `.gitignore`; solo se versionan los `*.example`.
 
 Para preparar el backend por primera vez:
@@ -385,6 +385,87 @@ Pruebas de la fase:
 * `ServidorReservasIT`: la misma prueba de punta a punta con `ServiceImpl` y
   MySQL reales; se omite si la base no está disponible.
 
+## Frontend: conexión y patrón Proxy (Fase 7)
+
+El frontend se comunica con el backend **solo** a través de
+`ServiceProxy`, que implementa la misma interfaz `Service` de `common`. Los
+controladores reciben esa interfaz por inyección y no saben que hay sockets de
+por medio: la Fase 8 puede cambiar el proxy por un doble de prueba sin tocar
+las vistas.
+
+| Clase | Responsabilidad |
+|---|---|
+| `ServiceProxy` | Implementa `Service`: arma cada `Solicitud`, espera la `Respuesta` y devuelve el resultado o lanza la excepción de dominio. |
+| `LectorMensajes` | Hilo lector dedicado: separa `Respuesta` (por id) de `Notificacion` (a las escuchas). |
+| `ConexionServidor` | Socket y flujos del protocolo; serializa las escrituras concurrentes. |
+| `EscuchaNotificaciones` | Interfaz que implementará el controlador de alertas (Fase 9). |
+| `TraductorErrores` | Convierte `ErrorRemoto` en `ValidacionException`, `ConflictoException`, etc. |
+| `ExcepcionRed` | Fallo de comunicación clasificado: sin conexión, conexión perdida, timeout, cierre o respuesta inválida. |
+| `ConfiguracionFrontend` | Host, puerto y timeout desde `frontend.properties`, variables de entorno o argumentos. |
+
+### Flujo de una petición
+
+1. Un controlador llama a un método de `Service` (por ejemplo,
+   `iniciarSesion("111", "111")`).
+2. `ServiceProxy` construye `Solicitud.de(...)` con un id de correlación nuevo y
+   registra un `CompletableFuture` en un mapa concurrente.
+3. `ConexionServidor` envía la solicitud y el hilo llamador espera la respuesta
+   con el timeout configurado.
+4. `LectorMensajes` recibe la `Respuesta`, y `ServiceProxy` completa el futuro
+   cuyo id coincide. El resultado se valida contra el tipo esperado.
+5. Si la respuesta es fallida, `TraductorErrores` lanza la excepción de dominio
+   con el mensaje del backend. Si el servidor no responde, se lanza
+   `ExcepcionRed` con un mensaje apto para el usuario.
+
+Una `Notificacion` que llega por el mismo socket no completa ningún futuro: se
+reenvía a las `EscuchaNotificaciones` registradas, desde el hilo lector. La
+Fase 9 se encargará de pasarla al hilo de eventos de Swing.
+
+### Configuración y ejecución
+
+`frontend.properties` es opcional. Orden de búsqueda:
+`-Dfrontend.config=...` → `FRONTEND_CONFIG` → `/frontend.properties` →
+valores por defecto. Las propiedades del sistema `servidor.host`,
+`servidor.puerto` y `proxy.timeout.ms` tienen prioridad sobre el archivo.
+
+```bash
+# misma máquina, puerto 5000 (por defecto)
+mvn -pl frontend -am exec:java
+
+# otro equipo
+mvn -pl frontend -am exec:java -Dexec.args="192.168.1.20 5000"
+# o con el JAR
+java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar 192.168.1.20 5000
+```
+
+El punto de entrada comprueba la conexión, informa el destino y cierra; la
+ventana de login se conecta en la Fase 8.
+
+### Separación de capas
+
+El POM del frontend no declara el driver MySQL, HikariCP ni el módulo
+`backend`. `DependenciasFrontendTest` lo verifica intentando cargar esas
+clases: si alguien agrega la dependencia, la prueba falla.
+
+Pruebas de la fase:
+
+* `ConfiguracionFrontendTest`: archivo, classpath, propiedades del sistema,
+  argumentos y validación de host, puerto y timeout.
+* `TraductorErroresTest`: cada `CodigoError` produce su excepción de dominio y
+  conserva el mensaje.
+* `ServiceProxyIT`: login, orden de parámetros, listas, emparejamiento por id
+  con respuestas desordenadas, notificaciones, errores de dominio, timeout,
+  servidor caído, pérdida de conexión, respuesta inválida y cierre idempotente.
+  Usa un `ServidorPrueba` que habla el protocolo real, sin MySQL ni el módulo
+  `backend`.
+* `ProxyBackendRealIT`: aceptación de la fase. Inicia sesión (`111/111`) contra
+  el backend real. Se omite si no hay un servidor escuchando; para ejecutarla,
+  arranque MySQL y `mvn -pl backend -am exec:java` y luego:
+
+```bash
+mvn -pl frontend -am -Dit.test=ProxyBackendRealIT verify
+```
+
 ## Base de datos
 
 Nombre de la base: **`proyectoII_reservas`** (MySQL 8.4 LTS, `utf8mb4`).
@@ -424,7 +505,7 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 | 4 | Backend: capa Lógica (Service) | ✅ Completada |
 | 5 | Protocolo de red | ✅ Completada |
 | 6 | Servidor multi-hilo y notificaciones | ✅ Completada |
-| 7 | Frontend: conexión y patrón Proxy | ⏳ Pendiente |
+| 7 | Frontend: conexión y patrón Proxy | ✅ Completada |
 | 8 | Frontend MVC (funcionalidades del P1) | ⏳ Pendiente |
 | 9 | Área de Alertas | ⏳ Pendiente |
 | 10 | Estadísticas | ⏳ Pendiente |
