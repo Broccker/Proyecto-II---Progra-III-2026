@@ -1,6 +1,7 @@
 package com.sistema.frontend.controller;
 
 import com.sistema.common.servicio.Service;
+import com.sistema.frontend.util.Validaciones;
 import com.sistema.frontend.view.VistaCambiarClave;
 import java.util.Objects;
 
@@ -32,25 +33,25 @@ public final class ControladorCambiarClave {
 
     /** Valida los campos y solicita el cambio al backend. */
     void aceptar() {
-        String id = vista.getId();
-        String actual = vista.getClaveActual();
-        String nueva = vista.getNuevaClave();
-        String confirmacion = vista.getConfirmacion();
-
-        if (id.isBlank()) {
-            vista.mostrarAdvertencia("Ingrese el identificador del usuario.");
-            return;
-        }
-        if (actual.isBlank()) {
-            vista.mostrarAdvertencia("Ingrese la clave actual.");
-            return;
-        }
-        if (nueva.isBlank()) {
-            vista.mostrarAdvertencia("Ingrese la nueva clave.");
+        String id;
+        String actual;
+        String nueva;
+        String confirmacion;
+        try {
+            id = Validaciones.identificador(vista.getId(), "El identificador del usuario");
+            actual = Validaciones.clave(vista.getClaveActual(), "La clave actual");
+            nueva = Validaciones.clave(vista.getNuevaClave(), "La clave nueva");
+            confirmacion = vista.getConfirmacion();
+        } catch (IllegalArgumentException e) {
+            vista.mostrarAdvertencia(e.getMessage());
             return;
         }
         if (!nueva.equals(confirmacion)) {
-            vista.mostrarAdvertencia("La confirmación no coincide con la nueva clave.");
+            vista.mostrarAdvertencia("La confirmación no coincide con la clave nueva.");
+            return;
+        }
+        if (nueva.equals(actual)) {
+            vista.mostrarAdvertencia("La clave nueva debe ser distinta de la actual.");
             return;
         }
 

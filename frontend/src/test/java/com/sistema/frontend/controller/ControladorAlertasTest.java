@@ -163,6 +163,21 @@ class ControladorAlertasTest {
     }
 
     @Test
+    @DisplayName("Al reconectar se restablece el panel y se vuelve a avisar si cae")
+    void restableceElAvisoTrasReconectar() {
+        ControladorAlertas controlador = controlador(DIRECTO);
+        ExcepcionRed corte = new ExcepcionRed(ExcepcionRed.Motivo.CONEXION_PERDIDA,
+                "Se perdió la conexión con el backend.");
+
+        controlador.alPerderConexion(corte);
+        controlador.conexionRestablecida();
+        controlador.alPerderConexion(corte);
+
+        verify(vista).mostrarConexion();
+        verify(vista, times(2)).mostrarDesconexion(contains("conexión"));
+    }
+
+    @Test
     @DisplayName("Vaciar descarta las alertas de la sesión")
     void vaciarDescartaTodo() {
         ControladorAlertas controlador = controlador(DIRECTO);

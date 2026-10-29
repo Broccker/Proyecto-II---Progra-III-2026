@@ -4,6 +4,7 @@ import com.sistema.common.modelo.CategoriaRecurso;
 import com.sistema.common.servicio.Service;
 import com.sistema.frontend.model.ModeloCategorias;
 import com.sistema.frontend.util.Reportes;
+import com.sistema.frontend.util.Validaciones;
 import com.sistema.frontend.view.VistaCategorias;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -65,14 +66,20 @@ public final class ControladorCategorias {
     }
 
     void guardar() {
-        String descripcion = vista.getDescripcion();
-        if (descripcion.isBlank()) {
-            vista.mostrarAdvertencia("Ingrese la descripción de la categoría.");
+        String descripcion;
+        String nuevoId;
+        try {
+            descripcion = Validaciones.texto(vista.getDescripcion(),
+                    "La descripción de la categoría",
+                    Validaciones.MAX_DESCRIPCION_CATEGORIA);
+            nuevoId = Validaciones.opcional(vista.getIdentificador(),
+                    "El identificador de la categoría", Validaciones.MAX_ID);
+        } catch (IllegalArgumentException e) {
+            vista.mostrarAdvertencia(e.getMessage());
             return;
         }
 
         CategoriaRecurso seleccionada = modelo.getSeleccionada();
-        String nuevoId = vista.getIdentificador();
         vista.habilitar(false);
         AtomicReference<CategoriaRecurso> creada = new AtomicReference<>();
         ejecutor.ejecutar(

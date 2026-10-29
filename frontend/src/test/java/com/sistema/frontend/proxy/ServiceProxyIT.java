@@ -298,6 +298,48 @@ class ServiceProxyIT {
     }
 
     @Test
+    @DisplayName("Reconecta tras una caída y vuelve a operar con el mismo proxy")
+    void reconectaTrasUnaCaida() throws Exception {
+        try (ServidorPrueba servidor = new ServidorPrueba(
+                solicitud -> List.of(DatosPrueba.categoria()))) {
+            servidor.iniciar();
+            try (ServiceProxy proxy = new ServiceProxy(configuracion(servidor.puerto()))) {
+                servidor.esperarClientes(1);
+
+                servidor.cerrarConexiones();
+                esperarDesconexion(proxy);
+                assertEquals(ExcepcionRed.Motivo.CONEXION_PERDIDA,
+                        assertThrows(ExcepcionRed.class,
+                                proxy::listarCategorias).motivo());
+
+                proxy.reconectar();
+
+                assertTrue(proxy.estaConectado());
+                servidor.esperarClientes(1);
+                assertEquals(List.of(DatosPrueba.categoria()),
+                        proxy.listarCategorias());
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("Si el backend sigue apagado, reconectar deja el proxy desconectado")
+    void reconectarSinBackendFalla() throws Exception {
+        ServidorPrueba servidor = new ServidorPrueba(solicitud -> null);
+        servidor.iniciar();
+        try (ServiceProxy proxy = new ServiceProxy(configuracion(servidor.puerto()))) {
+            servidor.close();
+            esperarDesconexion(proxy);
+
+            ExcepcionRed error = assertThrows(ExcepcionRed.class, proxy::reconectar);
+
+            assertEquals(ExcepcionRed.Motivo.SIN_CONEXION, error.motivo());
+            assertFalse(proxy.estaConectado());
+            assertTrue(error.getMessage().contains("servidor"));
+        }
+    }
+
+    @Test
     @DisplayName("El cierre es idempotente y rechaza nuevas peticiones")
     void cierraLaConexion() throws Exception {
         try (ServidorPrueba servidor = new ServidorPrueba(solicitud -> null)) {
@@ -312,6 +354,14 @@ class ServiceProxyIT {
                     proxy::listarCategorias);
             assertEquals(ExcepcionRed.Motivo.CERRADO, error.motivo());
         }
+    }
+
+    private static void esperarDesconexion(ServiceProxy proxy) throws InterruptedException {
+        long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
+        while (proxy.estaConectado() && System.nanoTime() < limite) {
+            Thread.sleep(10);
+        }
+        assertFalse(proxy.estaConectado(), "El proxy no detectó la caída a tiempo.");
     }
 
     private static ConfiguracionFrontend configuracion(int puerto) {

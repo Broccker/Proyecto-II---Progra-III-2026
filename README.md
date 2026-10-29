@@ -707,6 +707,107 @@ antes de llamarlas. Solo se contabilizan reservas en estado `ACTIVA`.
 * `GeneradorPDFTest`: el documento se cierra antes que el flujo de salida, de
   modo que el PDF no queda vacío (corrige un fallo de cierre detectado aquí).
 
+## Validación y errores transversal (Fase 11)
+
+La validación ocurre en dos niveles: el frontend avisa antes de enviar y el
+backend vuelve a comprobar todo antes de tocar MySQL. El servidor sigue siendo
+la autoridad; las reglas locales solo evitan viajes innecesarios.
+
+### Validaciones de los formularios
+
+`com.sistema.frontend.util.Validaciones` concentra los límites y los mensajes.
+Cada controlador valida sus campos y, si algo falla, muestra el texto en un
+diálogo sin llamar al backend.
+
+| Pantalla | Campos y reglas |
+|---|---|
+| Ingreso | Identificador obligatorio (≤ 20 caracteres) y clave obligatoria (≤ 72 bytes). |
+| Cambio de clave | Identificador, clave actual y clave nueva obligatorios; la confirmación debe coincidir y la nueva debe ser distinta de la actual. |
+| Funcionarios | Identificador obligatorio (≤ 20), nombre obligatorio (≤ 100) y teléfono con 7 a 15 dígitos y `+` opcional. |
+| Categorías | Descripción obligatoria (≤ 100); identificador nuevo opcional (≤ 20). |
+| Recursos | Identificador obligatorio (≤ 20), categoría seleccionada y descripción obligatoria (≤ 150). |
+| Nueva reserva | Actividad obligatoria (≤ 150), frase de IA obligatoria (≤ 1000), al menos una categoría, fecha no anterior a hoy y hora de fin posterior a la de inicio. |
+| Mis reservas | Debe haber una fila seleccionada; la cancelación de reservas pasadas la rechaza el backend. |
+| Calendarización | Categoría seleccionada y fecha con formato válido. |
+| Actividades | Fecha con formato válido. |
+| Estadísticas | Fechas con formato válido y **Desde** ≤ **Hasta** en cada panel. |
+
+Los **duplicados** (identificador de funcionario, recurso o categoría) los
+detecta MySQL y `DAOBase` los traduce a `ConflictoException` con un mensaje
+claro, que el frontend muestra en el diálogo de error. Las restricciones de
+clave foránea y de `CHECK` se traducen del mismo modo.
+
+### Errores del servidor
+
+* Toda petición devuelve una `Respuesta`; si falla, trae un `ErrorRemoto` con
+  código y mensaje de dominio. `ErrorRemoto.de` reemplaza cualquier mensaje
+  técnico por uno genérico, de modo que nunca se filtra un *stack trace*.
+* `TraductorErrores` convierte el error remoto en la excepción de dominio
+  correspondiente y `Errores.mensaje` obtiene el texto para el usuario.
+* Las vistas muestran ese texto con `mostrarError`/`mostrarAdvertencia`; los
+  fallos inesperados se registran solo en el log del proceso.
+
+### Concurrencia al reservar
+
+Dos usuarios pueden intentar reservar el mismo recurso en el mismo horario.
+`ReservaDAO.insertar` ejecuta todo dentro de una transacción:
+
+1. `SELECT id FROM recursos ... ORDER BY id FOR UPDATE` bloquea las filas de los
+   recursos implicados (el orden evita interbloqueos entre peticiones).
+2. Con el bloqueo tomado se vuelve a consultar el traslape con
+   `recursosOcupados`; si ya hay una reserva activa, se lanza
+   `ConflictoException`.
+3. Solo entonces inserta la reserva y su detalle en `reserva_recursos` y hace
+   `commit`.
+
+La segunda petición espera el bloqueo, vuelve a comprobar y recibe el conflicto;
+nunca se crean dos reservas para el mismo recurso y horario.
+`ServiceImplIT.dosPeticionesSimultaneasNoDuplicanLaReserva` lo comprueba con dos
+instancias de `ServiceImpl` y una `CyclicBarrier`: exactamente una petición
+tiene éxito, la otra recibe `ConflictoException`, y quedan una reserva y un
+detalle.
+
+### Caída, reconexión y cierre ordenado
+
+* `ServiceProxy` implementa `Reconectable`. Al cortarse el socket falla las
+  peticiones pendientes, marca el proxy como desconectado y avisa a las
+  escuchas.
+* `ControladorConexion` (registrado por `ControladorAplicacion`) muestra un
+  diálogo y ofrece reconectar hasta **3 veces**. La reconexión corre fuera del
+  hilo de eventos.
+* `ServiceProxy.reconectar()` cierra la conexión anterior y abre una nueva;
+  cada conexión tiene una **generación** para que un lector viejo no marque
+  como caída la conexión nueva. Las escuchas y la sesión se conservan.
+* Si el usuario declina o los intentos se agotan, la aplicación se cierra de
+  forma ordenada: quita escuchas, cierra la ventana principal, cierra la sesión
+  y el socket, y termina el proceso.
+* Cuando la conexión vuelve, `ControladorAlertas.conexionRestablecida()`
+  restablece el pie del panel de alertas.
+
+Para probarlo manualmente:
+
+1. Abra el backend y dos frontends (`mvn -pl backend -am exec:java` y
+   `mvn -pl frontend -am exec:java`).
+2. Inicie sesión y cree una reserva en un frontend: el otro recibe la alerta.
+3. Detenga el backend (`taskkill /PID <pid> /F`).
+4. En el frontend aparece el diálogo de conexión perdida; elija reintentar. Si
+   el backend sigue apagado se agotan los 3 intentos y la aplicación se cierra;
+   si se vuelve a iniciar el backend, la reconexión tiene éxito y el panel de
+   alertas vuelve a su estado normal.
+
+### Pruebas de la fase
+
+* `ValidacionesTest`: límites de longitud, texto en blanco, identificadores,
+  teléfono, clave por bytes y campos opcionales.
+* `ControladorConexionTest`: reconexión exitosa, máximo de intentos con cierre
+  ordenado y notificaciones que no le competen.
+* `ControladorAlertasTest`: el aviso de desconexión se restablece tras
+  reconectar y vuelve a mostrarse si cae otra vez.
+* `ServiceProxyIT`: reconexión tras una caída y fallo de reconexión cuando el
+  backend sigue apagado.
+* `ServiceImplIT`: dos altas simultáneas sobre el mismo recurso crean una sola
+  reserva.
+
 ## Base de datos
 
 Nombre de la base: **`proyectoII_reservas`** (MySQL 8.4 LTS, `utf8mb4`).
@@ -750,6 +851,6 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 | 8 | Frontend MVC (funcionalidades del P1) | ✅ Completada |
 | 9 | Área de Alertas | ✅ Completada |
 | 10 | Estadísticas | ✅ Completada |
-| 11 | Validación y errores transversal | ⏳ Pendiente |
+| 11 | Validación y errores transversal | ✅ Completada |
 | 12 | Pruebas JUnit 5 | ⏳ Pendiente |
 | 13 | Entrega y defensa | ⏳ Pendiente |

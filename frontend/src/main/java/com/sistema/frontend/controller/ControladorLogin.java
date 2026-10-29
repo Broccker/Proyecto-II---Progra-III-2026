@@ -3,6 +3,7 @@ package com.sistema.frontend.controller;
 import com.sistema.common.modelo.Usuario;
 import com.sistema.common.servicio.Service;
 import com.sistema.frontend.model.Sesion;
+import com.sistema.frontend.util.Validaciones;
 import com.sistema.frontend.view.VistaLogin;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,14 +41,13 @@ public final class ControladorLogin {
 
     /** Valida el formulario, autentica y registra la sesión. */
     void ingresar() {
-        String id = vista.getId();
-        String clave = vista.getClave();
-        if (id.isBlank()) {
-            vista.mostrarAdvertencia("Ingrese el identificador del usuario.");
-            return;
-        }
-        if (clave.isBlank()) {
-            vista.mostrarAdvertencia("Ingrese la clave.");
+        String id;
+        String clave;
+        try {
+            id = Validaciones.identificador(vista.getId(), "El identificador del usuario");
+            clave = Validaciones.clave(vista.getClave(), "La clave");
+        } catch (IllegalArgumentException e) {
+            vista.mostrarAdvertencia(e.getMessage());
             return;
         }
 

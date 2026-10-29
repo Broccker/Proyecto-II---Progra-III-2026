@@ -4,6 +4,7 @@ import com.sistema.common.modelo.Usuario;
 import com.sistema.common.servicio.Service;
 import com.sistema.frontend.model.Sesion;
 import com.sistema.frontend.proxy.FuenteNotificaciones;
+import com.sistema.frontend.proxy.Reconectable;
 import com.sistema.frontend.view.VistaCambiarClave;
 import com.sistema.frontend.view.VistaLogin;
 import java.awt.Frame;
@@ -26,6 +27,7 @@ public final class ControladorAplicacion {
     private final EjecutorTareas ejecutor;
     private final AutoCloseable conexion;
     private final FuenteNotificaciones notificaciones;
+    private final ControladorConexion controladorConexion;
     private final Sesion sesion = new Sesion();
 
     private JFrame marcoLogin;
@@ -34,11 +36,30 @@ public final class ControladorAplicacion {
     public ControladorAplicacion(Service servicio, EjecutorTareas ejecutor,
                                  AutoCloseable conexion,
                                  FuenteNotificaciones notificaciones) {
+        this(servicio, ejecutor, conexion, notificaciones,
+                conexion instanceof Reconectable reconectable ? reconectable : null);
+    }
+
+    /**
+     * @param reconectable origen de conexión que se puede reabrir; si es
+     *                     {@code null} no se ofrece reconexión
+     */
+    public ControladorAplicacion(Service servicio, EjecutorTareas ejecutor,
+                                 AutoCloseable conexion,
+                                 FuenteNotificaciones notificaciones,
+                                 Reconectable reconectable) {
         this.servicio = Objects.requireNonNull(servicio, "El servicio es obligatorio.");
         this.ejecutor = Objects.requireNonNull(ejecutor, "El ejecutor es obligatorio.");
         this.conexion = Objects.requireNonNull(conexion, "La conexión es obligatoria.");
         this.notificaciones = Objects.requireNonNull(notificaciones,
                 "La fuente de notificaciones es obligatoria.");
+        if (reconectable == null) {
+            this.controladorConexion = null;
+        } else {
+            this.controladorConexion =
+                    new ControladorConexion(reconectable, ejecutor, this::salir);
+            notificaciones.agregarEscucha(controladorConexion);
+        }
     }
 
     /** Punto de entrada de la interfaz; debe invocarse en el hilo de eventos. */
@@ -74,6 +95,11 @@ public final class ControladorAplicacion {
         principal.alCerrarSesion(this::cerrarSesion);
         principal.alSalir(this::salir);
         notificaciones.agregarEscucha(principal.getControladorAlertas());
+        if (controladorConexion != null) {
+            ControladorPrincipal abierto = principal;
+            controladorConexion.alRestablecer(
+                    () -> abierto.getControladorAlertas().conexionRestablecida());
+        }
         principal.mostrar();
     }
 
@@ -123,6 +149,9 @@ public final class ControladorAplicacion {
 
     /** Cierra ventanas y conexión. Es idempotente. */
     public void cerrarTodo() {
+        if (controladorConexion != null) {
+            notificaciones.quitarEscucha(controladorConexion);
+        }
         descartarAlertas();
         if (principal != null) {
             principal.cerrar();

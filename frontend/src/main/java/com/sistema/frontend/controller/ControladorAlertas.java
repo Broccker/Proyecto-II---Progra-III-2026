@@ -71,6 +71,12 @@ public final class ControladorAlertas implements EscuchaNotificaciones {
         hilo.ejecutar(() -> vista.mostrarDesconexion(mensaje));
     }
 
+    /** Restablece el estado del panel tras una reconexión exitosa. */
+    public void conexionRestablecida() {
+        desconexionAvisada.set(false);
+        hilo.ejecutar(vista::mostrarConexion);
+    }
+
     /** Abre el detalle de la alerta de esa fila. */
     public void ver(int fila) {
         Alerta alerta = alertaEn(fila);

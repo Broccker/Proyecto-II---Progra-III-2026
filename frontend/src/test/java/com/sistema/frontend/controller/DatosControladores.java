@@ -26,7 +26,8 @@ final class DatosControladores {
     static final String DESCRIPCION_RECURSO = "Proyector Epson";
     static final String ID_RESERVA = "RES-000001";
     static final String ACTIVIDAD = "Reunión de equipo";
-    static final LocalDate FECHA = LocalDate.of(2026, 11, 2);
+    /** Fecha futura relativa a la ejecución: el alta rechaza fechas pasadas. */
+    static final LocalDate FECHA = LocalDate.now().plusDays(7);
     static final LocalTime INICIO = LocalTime.of(9, 0);
     static final LocalTime FIN = LocalTime.of(11, 0);
 

@@ -124,6 +124,7 @@ public final class PanelAlertas extends JPanel {
         for (Alerta alerta : alertas) {
             tablaModelo.addRow(new Object[]{alerta.textoActividad(), "", ""});
         }
+        estadoConexion.setToolTipText(null);
         if (tablaModelo.getRowCount() == 0) {
             estadoConexion.setText("Sin alertas en esta sesión.");
         } else {
@@ -186,12 +187,20 @@ public final class PanelAlertas extends JPanel {
                 "¿Descartar la alerta de la actividad \"" + alerta.actividad() + "\"?");
     }
 
-    /** Informa que se perdió la conexión con el backend. */
+    /**
+     * Informa en el pie del panel que se perdió la conexión con el backend.
+     *
+     * <p>El diálogo lo muestra {@code ControladorConexion}, que es quien
+     * ofrece la reconexión; así no aparecen dos avisos por el mismo corte.</p>
+     */
     public void mostrarDesconexion(String mensaje) {
         estadoConexion.setText("Sin conexión con el servidor.");
-        Dialogos.advertir(this, "Alertas",
-                "Se perdió la conexión con el servidor; no llegarán más alertas.\n"
-                        + mensaje);
+        estadoConexion.setToolTipText(mensaje);
+    }
+
+    /** Restablece el estado del panel cuando la conexión vuelve. */
+    public void mostrarConexion() {
+        actualizar();
     }
 
     /** Texto del detalle, reutilizado por el diálogo y por las pruebas. */

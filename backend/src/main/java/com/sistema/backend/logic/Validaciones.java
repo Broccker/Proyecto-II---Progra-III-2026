@@ -24,7 +24,7 @@ final class Validaciones {
      */
     static String texto(String valor, String campo, int maximo) {
         if (valor == null || valor.isBlank()) {
-            throw new ValidacionException(campo + " no puede estar vacío.");
+            throw new ValidacionException(campo + " no puede quedar en blanco.");
         }
         String limpio = valor.trim();
         longitud(limpio, maximo, campo);

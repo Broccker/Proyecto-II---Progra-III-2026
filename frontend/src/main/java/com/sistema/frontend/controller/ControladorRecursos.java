@@ -5,6 +5,7 @@ import com.sistema.common.modelo.Recurso;
 import com.sistema.common.servicio.Service;
 import com.sistema.frontend.model.ModeloRecursos;
 import com.sistema.frontend.util.Reportes;
+import com.sistema.frontend.util.Validaciones;
 import com.sistema.frontend.view.VistaRecursos;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -81,19 +82,20 @@ public final class ControladorRecursos {
     }
 
     void guardar() {
-        String id = vista.getIdentificador();
-        String categoriaId = vista.getCategoriaId();
-        String descripcion = vista.getDescripcion();
-        if (id.isBlank()) {
-            vista.mostrarAdvertencia("Ingrese el identificador del recurso.");
+        String id;
+        String descripcion;
+        try {
+            id = Validaciones.identificador(vista.getIdentificador(),
+                    "El identificador del recurso");
+            descripcion = Validaciones.texto(vista.getDescripcion(),
+                    "La descripción del recurso", Validaciones.MAX_DESCRIPCION_RECURSO);
+        } catch (IllegalArgumentException e) {
+            vista.mostrarAdvertencia(e.getMessage());
             return;
         }
+        String categoriaId = vista.getCategoriaId();
         if (categoriaId == null || categoriaId.isBlank()) {
             vista.mostrarAdvertencia("Seleccione la categoría del recurso.");
-            return;
-        }
-        if (descripcion.isBlank()) {
-            vista.mostrarAdvertencia("Ingrese la descripción del recurso.");
             return;
         }
 

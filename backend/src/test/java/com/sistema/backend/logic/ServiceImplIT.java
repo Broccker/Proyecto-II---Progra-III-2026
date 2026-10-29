@@ -26,9 +26,15 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 /**
  * Pruebas de integración de la capa lógica contra MySQL.
@@ -168,6 +174,32 @@ class ServiceImplIT extends PruebaBDBase {
     }
 
     @Test
+    @Timeout(20)
+    @DisplayName("Dos peticiones simultáneas al mismo recurso crean una sola reserva")
+    void dosPeticionesSimultaneasNoDuplicanLaReserva() throws Exception {
+        crearFuncionario("333", "Luis Rojas", "88882222");
+        ServiceImpl otroBackend = nuevoServicio();
+        CyclicBarrier barrera = new CyclicBarrier(2);
+        ExecutorService ejecutor = Executors.newVirtualThreadPerTaskExecutor();
+        try {
+            Future<Boolean> primera = ejecutor.submit(
+                    () -> intentarReserva(servicio, "222", barrera));
+            Future<Boolean> segunda = ejecutor.submit(
+                    () -> intentarReserva(otroBackend, "333", barrera));
+
+            int exitos = (primera.get(10, TimeUnit.SECONDS) ? 1 : 0)
+                    + (segunda.get(10, TimeUnit.SECONDS) ? 1 : 0);
+
+            assertEquals(1, exitos,
+                    "Solo una de las dos peticiones debe crear la reserva.");
+        } finally {
+            ejecutor.shutdownNow();
+        }
+        assertEquals(1, contar("reservas"));
+        assertEquals(1, contar("reserva_recursos"));
+    }
+
+    @Test
     @DisplayName("La IA queda deshabilitada si no hay URL configurada")
     void iaSinConfiguracion() {
         assertThrows(ConfiguracionException.class,
@@ -184,5 +216,23 @@ class ServiceImplIT extends PruebaBDBase {
         Recurso actualizado = servicio.listarRecursos().getFirst();
         assertEquals("1010", actualizado.getId());
         assertEquals("CAT-000010", actualizado.getCategoria().getId());
+    }
+
+    private ServiceImpl nuevoServicio() {
+        return new ServiceImpl(new UsuarioDAO(fuente()), new CategoriaRecursoDAO(fuente()),
+                new RecursoDAO(fuente()), new ReservaDAO(fuente()),
+                new ClienteIA("", "", ""), RELOJ);
+    }
+
+    private static boolean intentarReserva(ServiceImpl servicio, String funcionarioId,
+                                           CyclicBarrier barrera) throws Exception {
+        barrera.await(5, TimeUnit.SECONDS);
+        try {
+            servicio.crearReserva(funcionarioId, "Reunión simultánea", HOY,
+                    LocalTime.of(9, 0), LocalTime.of(11, 0), List.of("CAT-000001"));
+            return true;
+        } catch (ConflictoException e) {
+            return false;
+        }
     }
 }

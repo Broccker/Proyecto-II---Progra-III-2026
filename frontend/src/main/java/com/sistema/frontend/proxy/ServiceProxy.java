@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,20 +55,23 @@ import java.util.logging.Logger;
  * en Swing deben ejecutarse fuera del hilo de eventos (por ejemplo, con
  * {@code SwingWorker}).</p>
  */
-public final class ServiceProxy implements Service, FuenteNotificaciones, AutoCloseable {
+public final class ServiceProxy implements Service, FuenteNotificaciones, Reconectable,
+        AutoCloseable {
 
     private static final Logger LOG = Logger.getLogger(ServiceProxy.class.getName());
 
     private final ConfiguracionFrontend configuracion;
-    private final ConexionServidor conexion;
-    private final LectorMensajes lector;
-    private final Thread hiloLector;
     private final Map<String, CompletableFuture<Respuesta>> pendientes =
             new ConcurrentHashMap<>();
     private final List<EscuchaNotificaciones> escuchas = new CopyOnWriteArrayList<>();
     private final AtomicBoolean cerrado = new AtomicBoolean(false);
-    private final AtomicBoolean conectado = new AtomicBoolean(true);
+    private final AtomicBoolean conectado = new AtomicBoolean(false);
+    private final AtomicLong generacion = new AtomicLong();
+    private final Object bloqueoConexion = new Object();
 
+    private volatile ConexionServidor conexion;
+    private volatile LectorMensajes lector;
+    private volatile Thread hiloLector;
     private volatile Throwable causaDeCorte;
 
     /**
@@ -79,17 +83,7 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, AutoCl
     public ServiceProxy(ConfiguracionFrontend configuracion) {
         this.configuracion = Objects.requireNonNull(configuracion,
                 "La configuración del frontend es obligatoria.");
-        try {
-            this.conexion = ConexionServidor.abrir(configuracion.host(),
-                    configuracion.puerto());
-        } catch (IOException e) {
-            throw ExcepcionRed.sinConexion(configuracion.host(), configuracion.puerto(), e);
-        }
-        this.lector = new LectorMensajes(conexion.entrada(), new Receptor());
-        this.hiloLector = Thread.ofPlatform()
-                .name("proxy-lector")
-                .daemon(true)
-                .start(lector);
+        abrirConexion();
     }
 
     /**
@@ -130,19 +124,92 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, AutoCl
      */
     @Override
     public void close() {
-        if (!cerrado.compareAndSet(false, true)) {
-            return;
+        synchronized (bloqueoConexion) {
+            if (!cerrado.compareAndSet(false, true)) {
+                return;
+            }
+            cerrarConexionActual(ExcepcionRed.cerrado());
         }
-        conectado.set(false);
-        fallarPendientes(ExcepcionRed.cerrado());
-        lector.detener();
-        conexion.close();
-        hiloLector.interrupt();
+    }
+
+    /**
+     * Reemplaza la conexión actual por una nueva con el mismo host y puerto.
+     *
+     * <p>Se usa cuando el backend se recuperó después de una caída. Mientras
+     * dura la reconexión el proxy rechaza peticiones; las escuchas registradas
+     * se conservan. Si el servidor sigue apagado, el proxy queda desconectado
+     * y se puede volver a intentar.</p>
+     *
+     * @throws ExcepcionRed si no se puede abrir la nueva conexión
+     */
+    @Override
+    public void reconectar() {
+        synchronized (bloqueoConexion) {
+            if (cerrado.get()) {
+                throw ExcepcionRed.cerrado();
+            }
+            cerrarConexionActual(ExcepcionRed.conexionPerdida(causaDeCorte));
+            try {
+                abrirConexion();
+            } catch (ExcepcionRed e) {
+                causaDeCorte = e;
+                conectado.set(false);
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * Abre el socket, arranca el lector y deja el proxy disponible.
+     */
+    private void abrirConexion() {
+        ConexionServidor nueva;
         try {
-            hiloLector.join(1_000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            nueva = ConexionServidor.abrir(configuracion.host(), configuracion.puerto());
+        } catch (IOException e) {
+            throw ExcepcionRed.sinConexion(configuracion.host(), configuracion.puerto(), e);
         }
+        long nuevaGeneracion = generacion.incrementAndGet();
+        this.conexion = nueva;
+        this.lector = new LectorMensajes(nueva.entrada(), new Receptor(nuevaGeneracion));
+        this.causaDeCorte = null;
+        this.conectado.set(true);
+        this.hiloLector = Thread.ofPlatform()
+                .name("proxy-lector-" + nuevaGeneracion)
+                .daemon(true)
+                .start(lector);
+    }
+
+    /**
+     * Invalida la generación actual, falla lo pendiente y cierra el socket.
+     * El incremento de generación evita que un lector viejo marque como caída
+     * la conexión nueva después de una reconexión.
+     */
+    private void cerrarConexionActual(Throwable causaPendientes) {
+        generacion.incrementAndGet();
+        conectado.set(false);
+        fallarPendientes(causaPendientes);
+
+        LectorMensajes lectorActual = lector;
+        ConexionServidor conexionActual = conexion;
+        Thread hiloActual = hiloLector;
+        if (lectorActual != null) {
+            lectorActual.detener();
+        }
+        if (conexionActual != null) {
+            conexionActual.close();
+        }
+        if (hiloActual != null && hiloActual != Thread.currentThread()) {
+            hiloActual.interrupt();
+            try {
+                hiloActual.join(1_000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        lector = null;
+        conexion = null;
+        hiloLector = null;
     }
 
     // ------------------------------------------------------------------
@@ -351,11 +418,16 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, AutoCl
         Solicitud solicitud = Solicitud.de(operacion, parametros);
         CompletableFuture<Respuesta> espera = new CompletableFuture<>();
         pendientes.put(solicitud.id(), espera);
+        long generacionActual = generacion.get();
+        ConexionServidor actual = conexion;
         try {
-            conexion.enviar(solicitud);
+            if (actual == null) {
+                throw new IOException("La conexión con el servidor no está disponible.");
+            }
+            actual.enviar(solicitud);
         } catch (IOException e) {
             pendientes.remove(solicitud.id());
-            perderConexion(e);
+            perderConexion(e, generacionActual);
             throw ExcepcionRed.conexionPerdida(e);
         }
 
@@ -388,14 +460,24 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, AutoCl
             throw ExcepcionRed.cerrado();
         }
         if (!conectado.get()) {
+            if (causaDeCorte instanceof ExcepcionRed error) {
+                throw error;
+            }
             throw ExcepcionRed.conexionPerdida(causaDeCorte);
         }
     }
 
     /**
      * Falla las peticiones pendientes y avisa a las escuchas, una sola vez.
+     *
+     * <p>Solo se atiende el corte de la generación vigente: un lector viejo
+     * que termina después de una reconexión no debe marcar como caída la
+     * conexión nueva.</p>
      */
-    private void perderConexion(Throwable causa) {
+    private void perderConexion(Throwable causa, long generacionAfectada) {
+        if (generacion.get() != generacionAfectada) {
+            return;
+        }
         if (cerrado.get() || !conectado.compareAndSet(true, false)) {
             return;
         }
@@ -465,6 +547,12 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, AutoCl
      */
     private final class Receptor implements LectorMensajes.Receptor {
 
+        private final long generacionDeLaConexion;
+
+        private Receptor(long generacionDeLaConexion) {
+            this.generacionDeLaConexion = generacionDeLaConexion;
+        }
+
         @Override
         public void alRecibirRespuesta(Respuesta respuesta) {
             CompletableFuture<Respuesta> espera = pendientes.remove(respuesta.id());
@@ -483,7 +571,7 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, AutoCl
 
         @Override
         public void alPerderConexion(Throwable causa) {
-            perderConexion(causa);
+            perderConexion(causa, generacionDeLaConexion);
         }
     }
 }

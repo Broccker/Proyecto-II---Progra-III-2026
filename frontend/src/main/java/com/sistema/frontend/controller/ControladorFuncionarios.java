@@ -4,6 +4,7 @@ import com.sistema.common.modelo.Funcionario;
 import com.sistema.common.servicio.Service;
 import com.sistema.frontend.model.ModeloFuncionarios;
 import com.sistema.frontend.util.Reportes;
+import com.sistema.frontend.util.Validaciones;
 import com.sistema.frontend.view.VistaFuncionarios;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -68,19 +69,17 @@ public final class ControladorFuncionarios {
 
     /** Crea un funcionario nuevo o guarda los cambios del seleccionado. */
     void guardar() {
-        String id = vista.getId();
-        String nombre = vista.getNombre();
-        String telefono = vista.getTelefono();
-        if (id.isBlank()) {
-            vista.mostrarAdvertencia("Ingrese el identificador del funcionario.");
-            return;
-        }
-        if (nombre.isBlank()) {
-            vista.mostrarAdvertencia("Ingrese el nombre del funcionario.");
-            return;
-        }
-        if (telefono.isBlank()) {
-            vista.mostrarAdvertencia("Ingrese el teléfono del funcionario.");
+        String id;
+        String nombre;
+        String telefono;
+        try {
+            id = Validaciones.identificador(vista.getId(),
+                    "El identificador del funcionario");
+            nombre = Validaciones.texto(vista.getNombre(), "El nombre",
+                    Validaciones.MAX_NOMBRE);
+            telefono = Validaciones.telefono(vista.getTelefono());
+        } catch (IllegalArgumentException e) {
+            vista.mostrarAdvertencia(e.getMessage());
             return;
         }
 

@@ -7,6 +7,7 @@ import com.sistema.common.modelo.Reserva;
 import com.sistema.common.servicio.Service;
 import com.sistema.frontend.model.ModeloReservas;
 import com.sistema.frontend.util.Reportes;
+import com.sistema.frontend.util.Validaciones;
 import com.sistema.frontend.view.VistaMisReservas;
 import com.sistema.frontend.view.VistaNuevaReserva;
 import java.nio.file.Path;
@@ -102,9 +103,12 @@ public final class ControladorReservas {
     }
 
     void reservar() {
-        String actividad = vistaNueva.getActividad();
-        if (actividad.isBlank()) {
-            vistaNueva.mostrarAdvertencia("Ingrese la actividad de la reserva.");
+        String actividad;
+        try {
+            actividad = Validaciones.texto(vistaNueva.getActividad(), "La actividad",
+                    Validaciones.MAX_ACTIVIDAD);
+        } catch (IllegalArgumentException e) {
+            vistaNueva.mostrarAdvertencia(e.getMessage());
             return;
         }
         List<String> categorias = vistaNueva.getIdsCategoriasSeleccionadas();
@@ -122,6 +126,15 @@ public final class ControladorReservas {
             fin = vistaNueva.getHoraFin();
         } catch (IllegalArgumentException e) {
             vistaNueva.mostrarAdvertencia(e.getMessage());
+            return;
+        }
+        if (fecha.isBefore(LocalDate.now())) {
+            vistaNueva.mostrarAdvertencia("La fecha no puede ser anterior a hoy.");
+            return;
+        }
+        if (!fin.isAfter(inicio)) {
+            vistaNueva.mostrarAdvertencia(
+                    "La hora de fin debe ser posterior a la hora de inicio.");
             return;
         }
 
@@ -145,9 +158,12 @@ public final class ControladorReservas {
     }
 
     void extraer() {
-        String frase = vistaNueva.getFrase();
-        if (frase.isBlank()) {
-            vistaNueva.mostrarAdvertencia("Escriba una frase para interpretar con IA.");
+        String frase;
+        try {
+            frase = Validaciones.texto(vistaNueva.getFrase(), "La frase",
+                    Validaciones.MAX_FRASE_IA);
+        } catch (IllegalArgumentException e) {
+            vistaNueva.mostrarAdvertencia(e.getMessage());
             return;
         }
         vistaNueva.habilitar(false);
