@@ -513,8 +513,8 @@ vuelve a validar longitudes, formato, claves y conflictos. Nunca se sustituye.
 
 | Rol | Pestañas |
 |---|---|
-| Administrador | Funcionarios, Categorías, Recursos, Calendarización, Actividades |
-| Funcionario | Reservas (nueva + mis reservas), Calendarización, Actividades |
+| Administrador | Funcionarios, Categorías, Recursos, Calendarización, Actividades, Estadísticas |
+| Funcionario | Reservas (nueva + mis reservas), Calendarización, Actividades, Estadísticas |
 
 | Módulo | Controlador | Operaciones |
 |---|---|---|
@@ -526,6 +526,7 @@ vuelve a validar longitudes, formato, claves y conflictos. Nunca se sustituye.
 | Reservas | `ControladorReservas` | Alta con extracción por IA, historial del funcionario, cancelación y PDF. |
 | Calendarización | `ControladorCalendarizacion` | Matriz de 24 horas por recurso de una categoría y exportación. |
 | Actividades | `ControladorActividades` | Matriz semanal de 24 horas por 7 días y exportación. |
+| Estadísticas | `ControladorEstadisticas` | Conteos agregados por categoría y por semana, gráfico y PDF. |
 
 `ControladorAplicacion` es el único que crea ventanas: muestra el login, abre la
 ventana principal según el rol, gestiona el diálogo de cambio de clave, el cierre
@@ -637,6 +638,75 @@ Pruebas de la fase:
   reserva creada en un cliente llega solo al otro; Ver y Desc. no generan
   tráfico; la caída de la conexión se informa en el panel.
 
+## Frontend: estadísticas (Fase 10)
+
+La pestaña **Estadísticas** está disponible para ambos roles y contiene dos
+paneles independientes:
+
+| Panel | Datos | Columnas |
+|---|---|---|
+| **Recursos** | Reservas activas que usaron recursos de cada categoría | Categoría, Reservas |
+| **Actividades** | Reservas activas por semana (identificada por su lunes) | Semana (lunes), Actividades |
+
+Cada panel tiene su propio rango **Desde/Hasta**, un botón **Calcular**, la tabla
+de resultados, un **gráfico de barras** (JFreeChart) y la exportación a PDF con
+la tabla y la imagen del gráfico.
+
+| Clase | Responsabilidad |
+|---|---|
+| `ModeloEstadisticas` | Guarda los dos conteos ya agregados que devolvió el backend. |
+| `PanelEstadistica` | Rango de fechas, tabla y gráfico de un panel; no calcula nada. |
+| `VistaEstadisticas` | Dos pestañas internas (Recursos y Actividades) y mensajes al usuario. |
+| `ControladorEstadisticas` | Valida el rango, consulta al backend fuera del hilo de eventos y vuelca el resultado en el modelo. |
+
+### Agregación en el backend
+
+El frontend nunca recibe la lista completa de reservas para contarlas: pide el
+conteo y MySQL hace el `COUNT`/`GROUP BY`.
+
+```sql
+-- Recursos: una reserva cuenta una sola vez por categoría
+SELECT c.id, c.descripcion, COUNT(DISTINCT rr.reserva_id) AS cantidad
+FROM categorias c
+JOIN recursos rc ON rc.categoria_id = c.id
+JOIN reserva_recursos rr ON rr.recurso_id = rc.id
+JOIN reservas r ON r.id = rr.reserva_id
+WHERE r.estado = 'ACTIVA' AND r.fecha BETWEEN ? AND ?
+GROUP BY c.id, c.descripcion
+ORDER BY cantidad DESC, c.descripcion;
+
+-- Actividades: se agrupa por el lunes de la semana de cada reserva
+SELECT DATE_SUB(fecha, INTERVAL WEEKDAY(fecha) DAY) AS lunes, COUNT(*) AS cantidad
+FROM reservas
+WHERE estado = 'ACTIVA' AND fecha BETWEEN ? AND ?
+GROUP BY lunes
+ORDER BY lunes;
+```
+
+Las consultas viven en `ReservaDAO.contarReservasPorCategoria` y
+`contarActividadesPorSemana`; `ServiceImpl` valida el rango con `Validaciones`
+antes de llamarlas. Solo se contabilizan reservas en estado `ACTIVA`.
+
+### Validación y errores
+
+* Si una fecha no tiene el formato `dd/MM/yyyy`, el selector lanza un mensaje y
+  no se consulta al backend.
+* Si **Desde** es posterior a **Hasta**, se avisa y tampoco se consulta.
+* Un error del servidor (por ejemplo, pérdida de conexión) se muestra en un
+  diálogo con el texto de dominio; el panel se reactiva para reintentar.
+
+### Pruebas de la fase
+
+* `ModeloEstadisticasTest`: estado inicial, conteos guardados y copia inmutable.
+* `VistaEstadisticasTest`: dos paneles, columnas, filas, series del gráfico,
+  rango independiente por panel, botones y habilitación.
+* `ControladorEstadisticasTest`: consulta con el rango elegido, rango invertido,
+  fecha inválida, error del backend, exportación a PDF y cancelación.
+* `EstadisticasIT`: el proxy transporta los conteos y la tabla y el gráfico
+  muestran exactamente las cifras que envió el servidor.
+* `GeneradorPDFTest`: el documento se cierra antes que el flujo de salida, de
+  modo que el PDF no queda vacío (corrige un fallo de cierre detectado aquí).
+
 ## Base de datos
 
 Nombre de la base: **`proyectoII_reservas`** (MySQL 8.4 LTS, `utf8mb4`).
@@ -679,7 +749,7 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 | 7 | Frontend: conexión y patrón Proxy | ✅ Completada |
 | 8 | Frontend MVC (funcionalidades del P1) | ✅ Completada |
 | 9 | Área de Alertas | ✅ Completada |
-| 10 | Estadísticas | ⏳ Pendiente |
+| 10 | Estadísticas | ✅ Completada |
 | 11 | Validación y errores transversal | ⏳ Pendiente |
 | 12 | Pruebas JUnit 5 | ⏳ Pendiente |
 | 13 | Entrega y defensa | ⏳ Pendiente |

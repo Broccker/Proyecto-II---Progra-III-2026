@@ -7,18 +7,20 @@ import com.sistema.frontend.model.ModeloActividades;
 import com.sistema.frontend.model.ModeloAlertas;
 import com.sistema.frontend.model.ModeloCalendarizacion;
 import com.sistema.frontend.model.ModeloCategorias;
+import com.sistema.frontend.model.ModeloEstadisticas;
 import com.sistema.frontend.model.ModeloFuncionarios;
 import com.sistema.frontend.model.ModeloRecursos;
 import com.sistema.frontend.model.ModeloReservas;
 import com.sistema.frontend.model.Sesion;
+import com.sistema.frontend.view.PanelAlertas;
 import com.sistema.frontend.view.VentanaPrincipal;
 import com.sistema.frontend.view.VistaActividades;
 import com.sistema.frontend.view.VistaCalendarizacion;
 import com.sistema.frontend.view.VistaCategorias;
+import com.sistema.frontend.view.VistaEstadisticas;
 import com.sistema.frontend.view.VistaFuncionarios;
 import com.sistema.frontend.view.VistaMisReservas;
 import com.sistema.frontend.view.VistaNuevaReserva;
-import com.sistema.frontend.view.PanelAlertas;
 import com.sistema.frontend.view.VistaRecursos;
 import com.sistema.frontend.view.VistaReservas;
 import java.util.ArrayList;
@@ -29,9 +31,9 @@ import java.util.Objects;
  * Ensambla la ventana principal según el rol del usuario autenticado.
  *
  * <p>El administrador mantiene funcionarios, categorías, recursos y consulta
- * la calendarización; el funcionario crea y cancela sus reservas y consulta
- * las actividades. Cada pestaña la arma un controlador de módulo con su
- * propio modelo.</p>
+ * la calendarización, las actividades y las estadísticas; el funcionario crea
+ * y cancela sus reservas y consulta las mismas vistas de consulta. Cada
+ * pestaña la arma un controlador de módulo con su propio modelo.</p>
  */
 public final class ControladorPrincipal {
 
@@ -124,6 +126,13 @@ public final class ControladorPrincipal {
                 servicio, modeloActividades, vistaActividades, ejecutor);
         ventana.agregarPestana("Actividades", "Actividades", vistaActividades);
         cargas.add(controladorActividades::cargar);
+
+        ModeloEstadisticas modeloEstadisticas = new ModeloEstadisticas();
+        VistaEstadisticas vistaEstadisticas = new VistaEstadisticas(modeloEstadisticas);
+        ControladorEstadisticas controladorEstadisticas = new ControladorEstadisticas(
+                servicio, modeloEstadisticas, vistaEstadisticas, ejecutor);
+        ventana.agregarPestana("Estadísticas", "Estadisticas", vistaEstadisticas);
+        cargas.add(controladorEstadisticas::cargar);
     }
 
     /** Muestra la ventana y lanza la carga inicial de cada pestaña. */

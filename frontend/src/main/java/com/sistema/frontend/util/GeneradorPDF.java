@@ -50,42 +50,46 @@ public final class GeneradorPDF {
             throws DocumentException, IOException {
         Document documento = new Document(PageSize.A4.rotate());
         try (OutputStream salida = Files.newOutputStream(destino)) {
-            PdfWriter.getInstance(documento, salida);
-            documento.open();
+            try {
+                PdfWriter.getInstance(documento, salida);
+                documento.open();
 
-            Font fuenteTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
-            Paragraph parrafoTitulo = new Paragraph(titulo, fuenteTitulo);
-            parrafoTitulo.setAlignment(Element.ALIGN_CENTER);
-            documento.add(parrafoTitulo);
-            documento.add(new Paragraph(" "));
-
-            if (imagen != null) {
-                ByteArrayOutputStream memoria = new ByteArrayOutputStream();
-                ImageIO.write(imagen, "png", memoria);
-                Image grafico = Image.getInstance(memoria.toByteArray());
-                grafico.scaleToFit(780, 260);
-                grafico.setAlignment(Element.ALIGN_CENTER);
-                documento.add(grafico);
+                Font fuenteTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
+                Paragraph parrafoTitulo = new Paragraph(titulo, fuenteTitulo);
+                parrafoTitulo.setAlignment(Element.ALIGN_CENTER);
+                documento.add(parrafoTitulo);
                 documento.add(new Paragraph(" "));
-            }
 
-            PdfPTable tabla = new PdfPTable(encabezados.length);
-            tabla.setWidthPercentage(100);
-            for (String encabezado : encabezados) {
-                PdfPCell celda = new PdfPCell(new Phrase(encabezado,
-                        FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11)));
-                celda.setBackgroundColor(new Color(0xE0, 0xE0, 0xE0));
-                tabla.addCell(celda);
-            }
-            for (String[] fila : filas) {
-                for (String celda : fila) {
-                    tabla.addCell(new PdfPCell(new Phrase(celda)));
+                if (imagen != null) {
+                    ByteArrayOutputStream memoria = new ByteArrayOutputStream();
+                    ImageIO.write(imagen, "png", memoria);
+                    Image grafico = Image.getInstance(memoria.toByteArray());
+                    grafico.scaleToFit(780, 260);
+                    grafico.setAlignment(Element.ALIGN_CENTER);
+                    documento.add(grafico);
+                    documento.add(new Paragraph(" "));
                 }
-            }
-            documento.add(tabla);
-        } finally {
-            if (documento.isOpen()) {
-                documento.close();
+
+                PdfPTable tabla = new PdfPTable(encabezados.length);
+                tabla.setWidthPercentage(100);
+                for (String encabezado : encabezados) {
+                    PdfPCell celda = new PdfPCell(new Phrase(encabezado,
+                            FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11)));
+                    celda.setBackgroundColor(new Color(0xE0, 0xE0, 0xE0));
+                    tabla.addCell(celda);
+                }
+                for (String[] fila : filas) {
+                    for (String celda : fila) {
+                        tabla.addCell(new PdfPCell(new Phrase(celda)));
+                    }
+                }
+                documento.add(tabla);
+            } finally {
+                // El cierre del documento escribe el final del PDF: debe
+                // ocurrir antes de que se cierre el flujo de salida.
+                if (documento.isOpen()) {
+                    documento.close();
+                }
             }
         }
     }
