@@ -26,7 +26,7 @@ eif206-proyecto2/                 (POM padre, packaging=pom)
 │       ├── config/               Lectura de backend.properties
 │       ├── data/                 DAOs JDBC + pool de conexiones (HikariCP)
 │       ├── logic/                ServiceImpl (reglas de negocio) e integración con IA
-│       └── server/               ServerSocket, ClientHandler, broadcast
+│       └── server/               Servidor, ManejadorCliente y RegistroClientes
 ├── frontend/                     Cliente Swing
 │   └── src/main/java/com/sistema/frontend/
 │       ├── proxy/                ServiceProxy (implementa Service vía sockets)
@@ -302,14 +302,88 @@ parámetros van en el orden del método y puede haber valores `null`.
 `Protocolo.crearEntrada` instala un `ObjectInputFilter` que solo admite clases
 de `com.sistema.common.*` y de las librerías estándar necesarias
 (`java.lang`, `java.time`, `java.util`, `java.math`). Rechaza cualquier otra
-clase y limita el tamaño del stream (32 MB), la profundidad (100), los arreglos
-(1 000 000 de elementos) y las referencias (1 000 000). Así un cliente
-malicioso no puede deserializar clases arbitrarias.
+clase y limita la profundidad (100), los arreglos (1 000 000 de elementos) y las
+referencias (1 000 000). El flujo de entrada corta **cada mensaje** que supere
+32 MB; el contador se reinicia después de leer un mensaje completo, de modo que
+el límite no se agota por acumulación en una conexión larga. Así un cliente
+malicioso no puede deserializar clases arbitrarias ni enviar objetos sin
+control de tamaño.
 
 Pruebas: `common/src/test/java/.../protocolo` cubre la serialización y
 deserialización de `Solicitud`, `Respuesta` (éxito y error), `Notificacion`,
-el mapeo 1:1 con `Service`, los códigos de error, el filtro y la
-serialización de todos los modelos.
+el mapeo 1:1 con `Service`, los códigos de error, el filtro, el límite por
+mensaje y la serialización de todos los modelos.
+
+## Servidor multi-hilo (Fase 6)
+
+El backend es un servidor concurrente que atiende a todos los frontends por
+sockets. Se eligieron **hilos virtuales** (`Executors.newThreadPerTaskExecutor`)
+porque cada conexión pasa la mayor parte del tiempo bloqueada esperando datos:
+así el servidor puede atender muchos clientes con un costo mínimo.
+
+| Clase | Responsabilidad |
+|---|---|
+| `Servidor` | Abre el `ServerSocket` en `servidor.puerto`, acepta conexiones, crea un `ManejadorCliente` por cliente y apaga todo de forma ordenada. |
+| `ManejadorCliente` | Bucle leer `Solicitud` → despachar → escribir `Respuesta`; difunde la notificación cuando se crea una reserva; maneja desconexiones y errores. |
+| `Despachador` | Traduce cada `Operacion` a la llamada correspondiente de `Service` y valida el tipo de los parámetros. |
+| `ClienteConectado` | Abstracción de un cliente: identificador, envío y cierre. |
+| `ConexionCliente` | Implementación sobre socket; serializa las escrituras con un lock por cliente. |
+| `RegistroClientes` | Registro thread-safe (`ConcurrentHashMap`), difusión asincrónica y eliminación/cierre de clientes que fallen. |
+
+### Flujo de una petición
+
+1. `accept()` asigna un id (`cliente-N`) y entrega el socket a un hilo virtual
+   con `ManejadorCliente`.
+2. `ConexionCliente` crea los flujos del protocolo (salida y `flush()` antes de
+   la entrada, para que ambos extremos intercambien cabeceras sin bloquearse).
+3. El manejador lee una `Solicitud`, `Despachador` invoca `Service` y responde
+   con el mismo `id` de correlación.
+4. Si la operación es `CREAR_RESERVA` y terminó bien, `RegistroClientes` encola
+   una `Notificacion.nuevaReserva(reserva)` para todos los clientes activos
+   **menos la conexión que la creó**.
+5. Un error de dominio viaja como `Respuesta` fallida con su `CodigoError`; un
+   error interno se reporta con un mensaje genérico.
+6. Al desconectarse, el cliente se elimina del registro y su socket se cierra.
+
+### Concurrencia, notificaciones y apagado
+
+* Una respuesta y una notificación pueden coincidir sobre el mismo socket:
+  `ConexionCliente.enviar` está sincronizado, así que cada mensaje se escribe
+  completo y no se mezclan los flujos.
+* La comparación para excluir al creador es por **conexión**, no por usuario:
+  si la misma persona abre dos frontends, la segunda sesión sí recibe la alerta.
+* La difusión usa un `Executor`: el hilo que atendió la petición no espera a
+  que todos los clientes escriban. Si un cliente falla, se elimina y se cierra.
+* El saludo inicial tiene un tiempo máximo de 10 s para que una conexión que no
+  envía la cabecera no ocupe un hilo indefinidamente.
+* `Servidor.detener()` y `ServidorMain` cierran en orden el socket de
+  aceptación, las conexiones activas, el ejecutor de clientes y el pool
+  HikariCP. También se ejecuta desde un *shutdown hook*.
+* El logging registra conexión, operación, código de error y desconexión;
+  nunca parámetros, claves ni datos personales.
+
+Para levantarlo:
+
+```bash
+mvn -pl backend -am exec:java
+# o, tras mvn package:
+java -jar backend/target/sistema-backend-2.0.0-SNAPSHOT.jar
+```
+
+El puerto se toma de `servidor.puerto` en `backend.properties` (5000 por
+defecto en la plantilla).
+
+Pruebas de la fase:
+
+* `DespachadorTest`: las 29 operaciones invocan el método correcto, se validan
+  los tipos y se propagan los errores de dominio.
+* `RegistroClientesTest`: exclusión del origen, difusión diferida, eliminación
+  del cliente que falla y cierre masivo.
+* `ServidorTest`: ciclo de vida y validación del puerto.
+* `ServidorIT`: dos clientes reales por socket; uno crea una reserva, el otro
+  recibe la notificación y el creador no.
+* `ServidorReservasIT`: la misma prueba de punta a punta con `ServiceImpl` y
+  MySQL reales; se omite si la base no está disponible.
 
 ## Base de datos
 
@@ -349,7 +423,7 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 | 3 | Backend: capa de Datos (JDBC) | ✅ Completada |
 | 4 | Backend: capa Lógica (Service) | ✅ Completada |
 | 5 | Protocolo de red | ✅ Completada |
-| 6 | Servidor multi-hilo y notificaciones | ⏳ Pendiente |
+| 6 | Servidor multi-hilo y notificaciones | ✅ Completada |
 | 7 | Frontend: conexión y patrón Proxy | ⏳ Pendiente |
 | 8 | Frontend MVC (funcionalidades del P1) | ⏳ Pendiente |
 | 9 | Área de Alertas | ⏳ Pendiente |
