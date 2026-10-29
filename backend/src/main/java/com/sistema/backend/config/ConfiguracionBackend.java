@@ -22,23 +22,38 @@ import java.util.Properties;
  * </ol>
  *
  * <p>Además, las propiedades del sistema {@code bd.url}, {@code bd.usuario},
- * {@code bd.clave}, {@code bd.pool.tamano} y {@code servidor.puerto} sobrescriben
+ * {@code bd.clave}, {@code bd.pool.tamano}, {@code servidor.puerto},
+ * {@code llm.api.url}, {@code llm.api.key} y {@code llm.model} sobrescriben
  * el archivo. Así se pueden inyectar credenciales en otro equipo sin editar
  * el archivo versionado.</p>
  *
  * <p>Las credenciales nunca se escriben en el código: viven en el archivo
- * {@code backend.properties}, que está en {@code .gitignore}.</p>
+ * {@code backend.properties}, que está en {@code .gitignore}. La clave del
+ * proveedor de IA solo existe en el backend: el frontend nunca la recibe.</p>
  */
 public record ConfiguracionBackend(
         String urlBd,
         String usuarioBd,
         String claveBd,
         int puertoServidor,
-        int tamanoPool) {
+        int tamanoPool,
+        String urlIA,
+        String claveIA,
+        String modeloIA) {
 
     private static final String RECURSO_POR_DEFECTO = "/backend.properties";
     private static final int PUERTO_POR_DEFECTO = 5000;
     private static final int POOL_POR_DEFECTO = 10;
+    private static final String MODELO_IA_POR_DEFECTO = "gpt-4o-mini";
+
+    /**
+     * Constructor de compatibilidad para configuraciones sin servicio de IA.
+     */
+    public ConfiguracionBackend(String urlBd, String usuarioBd, String claveBd,
+                                int puertoServidor, int tamanoPool) {
+        this(urlBd, usuarioBd, claveBd, puertoServidor, tamanoPool,
+                "", "", MODELO_IA_POR_DEFECTO);
+    }
 
     public ConfiguracionBackend {
         if (urlBd == null || !urlBd.startsWith("jdbc:mysql://")) {
@@ -59,6 +74,10 @@ public record ConfiguracionBackend(
             throw new ConfiguracionException(
                     "El tamaño del pool debe estar entre 1 y 100.");
         }
+        urlIA = urlIA == null ? "" : urlIA.trim();
+        claveIA = claveIA == null ? "" : claveIA.trim();
+        modeloIA = modeloIA == null || modeloIA.isBlank()
+                ? MODELO_IA_POR_DEFECTO : modeloIA.trim();
     }
 
     /**
@@ -127,7 +146,11 @@ public record ConfiguracionBackend(
         }
         int puerto = entero(propiedades, "servidor.puerto", PUERTO_POR_DEFECTO);
         int pool = entero(propiedades, "bd.pool.tamano", POOL_POR_DEFECTO);
-        return new ConfiguracionBackend(url.trim(), usuario.trim(), clave, puerto, pool);
+        String urlIA = valor(propiedades, "llm.api.url");
+        String claveIA = valor(propiedades, "llm.api.key");
+        String modeloIA = valor(propiedades, "llm.model");
+        return new ConfiguracionBackend(url.trim(), usuario.trim(), clave, puerto, pool,
+                urlIA, claveIA, modeloIA);
     }
 
     private static String valor(Properties propiedades, String clave) {

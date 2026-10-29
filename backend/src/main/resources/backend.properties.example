@@ -15,3 +15,11 @@ bd.pool.tamano=10
 
 # Puerto donde escuchará el servidor de sockets (Fase 6)
 servidor.puerto=5000
+
+# Servicio de IA para interpretar frases de reserva (opcional).
+# La clave se queda en el backend y nunca viaja al frontend.
+# Si deja llm.api.url vacío, la función de IA queda deshabilitada con un
+# mensaje claro y el resto del sistema sigue funcionando.
+llm.api.url=https://api.openai.com/v1/chat/completions
+llm.api.key=coloque-aqui-su-clave
+llm.model=gpt-4o-mini

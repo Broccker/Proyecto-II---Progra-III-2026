@@ -116,6 +116,35 @@ public final class RecursoDAO extends DAOBase {
         });
     }
 
+    /**
+     * Indica si otra descripción de la misma categoría ya existe.
+     *
+     * @param categoriaId categoría donde se busca
+     * @param descripcion descripción a comprobar
+     * @param excluirId   recurso a excluir (al modificar), o {@code null}
+     */
+    public boolean existeDescripcionEnCategoria(String categoriaId, String descripcion,
+                                                String excluirId) {
+        Objects.requireNonNull(categoriaId, "La categoría es obligatoria.");
+        Objects.requireNonNull(descripcion, "La descripción es obligatoria.");
+        return enConsulta("verificar descripción de recurso", conexion -> {
+            String sql = excluirId == null
+                    ? "SELECT 1 FROM recursos WHERE categoria_id = ? AND descripcion = ?"
+                    : "SELECT 1 FROM recursos WHERE categoria_id = ? AND descripcion = ? "
+                            + "AND id <> ?";
+            try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+                sentencia.setString(1, categoriaId);
+                sentencia.setString(2, descripcion.trim());
+                if (excluirId != null) {
+                    sentencia.setString(3, excluirId);
+                }
+                try (ResultSet filas = sentencia.executeQuery()) {
+                    return filas.next();
+                }
+            }
+        });
+    }
+
     public void insertar(Recurso recurso) {
         Objects.requireNonNull(recurso, "El recurso es obligatorio.");
         enTransaccion("insertar recurso", conexion -> {

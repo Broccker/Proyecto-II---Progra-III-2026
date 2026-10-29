@@ -37,6 +37,8 @@ import java.util.Set;
  */
 public final class ReservaDAO extends DAOBase {
 
+    private static final String PREFIJO_ID = "RES-";
+
     private static final String SELECT_BASE = """
             SELECT r.id, r.funcionario_id, u.nombre AS funcionario_nombre,
                    u.telefono AS funcionario_telefono, r.actividad, r.fecha,
@@ -85,6 +87,46 @@ public final class ReservaDAO extends DAOBase {
         Objects.requireNonNull(id, "El identificador es obligatorio.");
         List<Reserva> reservas = consultar(SELECT_BASE + " WHERE r.id = ?", List.of(id));
         return reservas.isEmpty() ? Optional.empty() : Optional.of(reservas.getFirst());
+    }
+
+    /**
+     * Calcula el siguiente identificador con el formato {@code RES-000001}.
+     */
+    public String siguienteId() {
+        return enConsulta("calcular siguiente reserva", conexion -> {
+            try (PreparedStatement sentencia = conexion.prepareStatement(
+                    "SELECT MAX(id) FROM reservas");
+                 ResultSet filas = sentencia.executeQuery()) {
+                filas.next();
+                String maximo = filas.getString(1);
+                int numero = 0;
+                if (maximo != null && maximo.startsWith(PREFIJO_ID)) {
+                    try {
+                        numero = Integer.parseInt(maximo.substring(PREFIJO_ID.length()));
+                    } catch (NumberFormatException ignorado) {
+                        numero = 0;
+                    }
+                }
+                return String.format("%s%06d", PREFIJO_ID, numero + 1);
+            }
+        });
+    }
+
+    /**
+     * Indica si el recurso aparece en alguna reserva, activa o cancelada.
+     * Se usa para explicar por qué no se puede eliminar.
+     */
+    public boolean existeRecursoReservado(String recursoId) {
+        Objects.requireNonNull(recursoId, "El recurso es obligatorio.");
+        return enConsulta("verificar reservas del recurso", conexion -> {
+            try (PreparedStatement sentencia = conexion.prepareStatement(
+                    "SELECT 1 FROM reserva_recursos WHERE recurso_id = ? LIMIT 1")) {
+                sentencia.setString(1, recursoId);
+                try (ResultSet filas = sentencia.executeQuery()) {
+                    return filas.next();
+                }
+            }
+        });
     }
 
     /**

@@ -20,7 +20,7 @@ eif206-proyecto2/                 (POM padre, packaging=pom)
 │   └── src/main/java/com/sistema/backend/
 │       ├── config/               Lectura de backend.properties
 │       ├── data/                 DAOs JDBC + pool de conexiones (HikariCP)
-│       ├── logic/                ServiceImpl (reglas de negocio)
+│       ├── logic/                ServiceImpl (reglas de negocio) e integración con IA
 │       └── server/               ServerSocket, ClientHandler, broadcast
 ├── frontend/                     Cliente Swing
 │   └── src/main/java/com/sistema/frontend/
@@ -92,7 +92,7 @@ java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar
 ## Configuración y credenciales
 
 * `backend/src/main/resources/backend.properties` — URL, usuario y clave de MySQL,
-  puerto del servidor y tamaño del pool.
+  puerto del servidor, tamaño del pool y datos del servicio de IA.
 * `frontend/src/main/resources/frontend.properties` — host y puerto del backend (Fase 7).
 * Ambos archivos están en `.gitignore`; solo se versionan los `*.example`.
 
@@ -110,9 +110,15 @@ Luego ajuste `bd.url`, `bd.usuario` y `bd.clave`. La clase
 2. La variable de entorno `BACKEND_CONFIG`
 3. El recurso `/backend.properties` del classpath
 
-Además, `-Dbd.url`, `-Dbd.usuario`, `-Dbd.clave`, `-Dbd.pool.tamano` y
-`-Dservidor.puerto` sobrescriben el archivo, útil para equipos de integración
-sin editar credenciales versionadas.
+Además, `-Dbd.url`, `-Dbd.usuario`, `-Dbd.clave`, `-Dbd.pool.tamano`,
+`-Dservidor.puerto`, `-Dllm.api.url`, `-Dllm.api.key` y `-Dllm.model`
+sobrescriben el archivo, útil para equipos de integración sin editar
+credenciales versionadas.
+
+La sección `llm.*` configura el servicio de IA que interpreta frases de reserva.
+La clave **solo existe en el backend**: el frontend nunca la recibe. Si
+`llm.api.url` queda vacío, la función de IA se deshabilita con un mensaje claro
+y el resto del sistema sigue funcionando.
 
 ## Capa de datos (Fase 3)
 
@@ -144,6 +150,55 @@ Decisiones de la capa:
   del driver.
 * Los conteos de estadísticas (`ConteoCategoria`, `ConteoSemana`) se calculan
   con `COUNT`/`GROUP BY` en el backend y se devuelven como DTO serializables.
+
+## Capa lógica (Fase 4)
+
+La interfaz `com.sistema.common.servicio.Service` define todo lo que el
+frontend necesita; `backend.logic.ServiceImpl` la implementa usando los DAOs.
+El frontend solo verá la interfaz (a través del Proxy), nunca las clases de
+`backend`.
+
+| Grupo | Operaciones principales |
+|---|---|
+| Sesión | `iniciarSesion`, `cambiarClave` (BCrypt) |
+| Funcionarios | alta, modificación, eliminación, listado y búsqueda |
+| Categorías y recursos | CRUD, búsquedas, filtros y comprobación de descripciones |
+| Reservas | alta con recursos automáticos, cancelación, listados por funcionario y por rango |
+| Matrices | actividades de la semana y calendarización por categoría |
+| Estadísticas | reservas por categoría y actividades por semana |
+| IA | `extraerDatosReserva` a partir de una frase libre |
+
+Reglas y decisiones:
+
+* **Las validaciones viven en el servidor**, aunque el frontend también las
+  repita: identificadores y descripciones únicos, longitudes máximas de las
+  columnas, fechas no pasadas, hora de fin posterior al inicio, pertenencia de
+  la reserva y disponibilidad de recursos.
+* **Claves con BCrypt**: la clave nunca se guarda ni se devuelve en texto plano.
+  Un funcionario nuevo recibe su identificador como clave inicial, igual que en
+  el Proyecto #1.
+* **Borrados protegidos**: no se elimina un funcionario con reservas (aunque
+  estén canceladas), una categoría con recursos ni un recurso incluido en
+  reservas, para conservar el historial.
+* **Concurrencia**: un bloqueo en proceso serializa la generación de
+  `CAT-...`/`RES-...` y la elección de recursos; la transacción del DAO con
+  `SELECT ... FOR UPDATE` sigue siendo la garantía frente a varias instancias.
+* **Reloj inyectable**: `ServiceImpl` recibe un `Clock`, lo que permite probar
+  fechas y cancelaciones de forma determinista.
+* **IA en el backend**: `logic.ia.ClienteIA` llama al proveedor, interpreta el
+  JSON con `AnalizadorRespuestaIA` y resuelve las categorías con
+  `MapeoCategorias`. Devuelve un `DatosReservaSugerida` con las categorías
+  encontradas y las que no existen en el sistema.
+* **Reportes en el frontend**: PDF y gráficos se generan en el cliente a partir
+  de los datos que expone `Service`; la interfaz no tiene métodos de reporte.
+
+Pruebas de la fase:
+
+* Unitarias con JUnit 5 + Mockito: sesión, funcionarios, categorías, recursos,
+  reservas, matrices/estadísticas, IA y configuración.
+* Integración (`*IT`) contra MySQL: `ServiceImplIT` recorre autenticación,
+  cambio de clave, alta de funcionarios, reservas, cancelación, estadísticas,
+  matrices y protección de catálogos.
 
 ## Base de datos
 
@@ -181,7 +236,7 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 | 1 | Estructura Maven multi-módulo | ✅ Completada |
 | 2 | Base de datos MySQL | ✅ Completada |
 | 3 | Backend: capa de Datos (JDBC) | ✅ Completada |
-| 4 | Backend: capa Lógica (Service) | ⏳ Pendiente |
+| 4 | Backend: capa Lógica (Service) | ✅ Completada |
 | 5 | Protocolo de red | ⏳ Pendiente |
 | 6 | Servidor multi-hilo y notificaciones | ⏳ Pendiente |
 | 7 | Frontend: conexión y patrón Proxy | ⏳ Pendiente |

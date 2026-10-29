@@ -30,7 +30,7 @@ import org.mindrot.jbcrypt.BCrypt;
  * mensaje claro en el reporte de Failsafe, en lugar de romper la compilación
  * de un compañero que solo está trabajando en el frontend.</p>
  */
-abstract class PruebaBDBase {
+public abstract class PruebaBDBase {
 
     /** Clave de prueba hasheada una sola vez para todas las pruebas. */
     protected static final String CLAVE_HASH = BCrypt.hashpw("clave", BCrypt.gensalt(4));
@@ -66,7 +66,7 @@ abstract class PruebaBDBase {
     }
 
     @BeforeEach
-    void limpiarTablas() throws SQLException {
+    protected void limpiarTablas() throws SQLException {
         try (Connection conexion = fuente().conectar();
              Statement sentencia = conexion.createStatement()) {
             sentencia.execute("SET FOREIGN_KEY_CHECKS = 0");
