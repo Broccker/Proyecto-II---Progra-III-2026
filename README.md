@@ -44,7 +44,7 @@ eif206-proyecto2/                 (POM padre, packaging=pom)
 
 * **JDK 26** (el proyecto compila con `release 26`).
 * **Maven 3.9+** (o el Maven incluido en IntelliJ IDEA).
-* **MySQL 8.0+** (a partir de la Fase 2).
+* **MySQL 8.4 LTS** (el esquema usa `utf8mb4_0900_ai_ci` y restricciones `CHECK`).
 
 ## Compilar y probar
 
@@ -83,6 +83,29 @@ java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar
 * `frontend/src/main/resources/frontend.properties` — host y puerto del backend.
 * Ambos archivos están en `.gitignore`; solo se versionan los `*.example`.
 
+## Base de datos
+
+Nombre de la base: **`proyectoII_reservas`** (MySQL 8.4 LTS, `utf8mb4`).
+
+```bash
+mysql -u root -p --default-character-set=utf8mb4 < sql/schema.sql
+mysql -u root -p --default-character-set=utf8mb4 < sql/datos_iniciales.sql
+```
+
+`schema.sql` crea la base desde cero (elimina la anterior si existe) y
+`datos_iniciales.sql` carga categorías, recursos, reservas de ejemplo y cuatro
+usuarios de prueba con clave hasheada (BCrypt):
+
+| Identificador | Clave | Rol |
+|---|---|---|
+| `111` | `111` | Administrador |
+| `222` | `222` | Funcionario |
+| `333` | `333` | Funcionario |
+| `444` | `444` | Funcionario |
+
+El detalle del modelo, el diagrama ER (Mermaid), las decisiones de diseño y las
+consultas de estadísticas están en [`sql/README.md`](sql/README.md).
+
 ## Ramas de trabajo
 
 * `main`: versión estable y entregable.
@@ -94,7 +117,7 @@ java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar
 | Fase | Descripción | Estado |
 |---|---|---|
 | 1 | Estructura Maven multi-módulo | ✅ Completada |
-| 2 | Base de datos MySQL | ⏳ Pendiente |
+| 2 | Base de datos MySQL | ✅ Completada |
 | 3 | Backend: capa de Datos (JDBC) | ⏳ Pendiente |
 | 4 | Backend: capa Lógica (Service) | ⏳ Pendiente |
 | 5 | Protocolo de red | ⏳ Pendiente |
