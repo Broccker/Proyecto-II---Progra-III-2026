@@ -1,0 +1,32 @@
+# Salidas de compilación de Maven
+target/
+dependency-reduced-pom.xml
+
+# Archivos de configuración con credenciales (solo se versionan los .example)
+backend/src/main/resources/backend.properties
+frontend/src/main/resources/frontend.properties
+
+# IntelliJ IDEA (las configuraciones compartidas viven en .run/)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Otros IDE
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+nbproject/private/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Entregables y respaldos
+*.zip
+*.rar
+*.7z
+*.log

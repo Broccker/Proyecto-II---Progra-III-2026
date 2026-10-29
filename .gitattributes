@@ -1,0 +1,15 @@
+# Normaliza los finales de línea para evitar ruido en los diffs
+* text=auto eol=lf
+
+# Scripts de Windows
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.jar binary
+*.pdf binary
+*.zip binary

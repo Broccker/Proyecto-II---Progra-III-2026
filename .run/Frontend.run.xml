@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Frontend" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.sistema.frontend.ClienteMain" />
+    <module name="sistema-frontend" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/frontend" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
