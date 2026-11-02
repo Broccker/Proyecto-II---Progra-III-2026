@@ -808,6 +808,48 @@ Para probarlo manualmente:
 * `ServiceImplIT`: dos altas simultáneas sobre el mismo recurso crean una sola
   reserva.
 
+## Pruebas y cobertura (Fase 12)
+
+El proyecto separa las pruebas por convención y por plugin de Maven:
+
+| Sufijo | Plugin | Comando | Dependencias |
+|---|---|---|---|
+| `*Test` | Surefire | `mvn test` | Ninguna externa: DAO y servidor simulados con Mockito. |
+| `*IT` | Failsafe | `mvn verify` | MySQL de prueba y, opcionalmente, un backend real. |
+
+```bash
+mvn test       # 271 pruebas unitarias
+mvn verify     # 271 unitarias + 75 de integración
+```
+
+Resultado actual con MySQL activo: **346 pruebas, 0 fallos, 1 omitida**
+(`ProxyBackendRealIT`, que solo corre si hay un backend externo escuchando).
+Las pruebas de Swing se ejecutan con `-Djava.awt.headless=true` y no abren
+ventanas reales.
+
+### Qué cubre cada grupo
+
+* **Unitarias del backend**: lógica de `ServiceImpl` con DAO simulados
+  (sesión, funcionarios, categorías, recursos, reservas, matrices, estadísticas
+  e IA), validadores, despachador, registro de clientes, configuración y el
+  cliente del proveedor de IA.
+* **Unitarias del frontend**: los diez controladores, modelos de sesión,
+  alertas y estadísticas, proxy (traducción de errores), validaciones locales,
+  PDF, vistas sin pantalla y la guardia de dependencias que impide que el
+  cliente cargue JDBC o clases del backend.
+* **Unitarias de `common`**: serialización de `Solicitud`, `Respuesta` y
+  `Notificacion`, límites de bytes, operaciones 1:1 con `Service`, modelos y
+  DTO serializables.
+* **Integración**: los cuatro DAO contra MySQL, `ServiceImpl` con la base real
+  (incluida la concurrencia de dos reservas simultáneas), el servidor con
+  clientes reales por socket, el escenario multi-cliente con notificación y el
+  proxy del frontend contra un servidor que habla el protocolo real.
+* **Aceptación**: `ProxyBackendRealIT` inicia sesión contra el backend real.
+
+El detalle por funcionalidad y por criterio de la rúbrica está en
+[`docs/COBERTURA.md`](docs/COBERTURA.md), junto con los comandos para ejecutar
+una prueba concreta y los requisitos externos.
+
 ## Base de datos
 
 Nombre de la base: **`proyectoII_reservas`** (MySQL 8.4 LTS, `utf8mb4`).
@@ -852,5 +894,5 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 | 9 | Área de Alertas | ✅ Completada |
 | 10 | Estadísticas | ✅ Completada |
 | 11 | Validación y errores transversal | ✅ Completada |
-| 12 | Pruebas JUnit 5 | ⏳ Pendiente |
+| 12 | Pruebas JUnit 5 | ✅ Completada |
 | 13 | Entrega y defensa | ⏳ Pendiente |
