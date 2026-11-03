@@ -6,6 +6,7 @@ import com.sistema.frontend.controller.ControladorAplicacion;
 import com.sistema.frontend.controller.EjecutorSwing;
 import com.sistema.frontend.proxy.ExcepcionRed;
 import com.sistema.frontend.proxy.ServiceProxy;
+import com.sistema.frontend.util.Localizacion;
 import java.awt.GraphicsEnvironment;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -28,6 +29,7 @@ public final class ClienteMain {
 
     public static void main(String[] args) {
         instalarLookAndFeel();
+        Localizacion.aplicar();
 
         ConfiguracionFrontend configuracion;
         try {

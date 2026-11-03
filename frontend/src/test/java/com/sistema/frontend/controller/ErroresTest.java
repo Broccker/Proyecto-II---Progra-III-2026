@@ -29,7 +29,7 @@ class ErroresTest {
     @Test
     @DisplayName("Un error inesperado no expone detalles internos")
     void resumenLosErroresInesperados() {
-        assertEquals("Ocurrió un error inesperado. (IllegalStateException)",
+        assertEquals("Ocurrió un error inesperado.",
                 Errores.mensaje(new IllegalStateException()));
     }
 

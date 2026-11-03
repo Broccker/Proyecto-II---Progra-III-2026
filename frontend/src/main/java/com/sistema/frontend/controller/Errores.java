@@ -26,8 +26,7 @@ public final class Errores {
         if (texto != null && !texto.isBlank()) {
             return texto;
         }
-        String tipo = causa.getClass().getSimpleName();
-        return tipo.isBlank() ? MENSAJE_GENERICO : MENSAJE_GENERICO + " (" + tipo + ")";
+        return MENSAJE_GENERICO;
     }
 
     private static Throwable desenrollar(Throwable error) {

@@ -25,6 +25,8 @@ public final class SelectorArchivoPdf {
             return null;
         }
         JFileChooser selector = new JFileChooser();
+        selector.setDialogTitle("Guardar reporte PDF");
+        selector.setApproveButtonText("Guardar");
         selector.setSelectedFile(new java.io.File(nombreSugerido));
         if (selector.showSaveDialog(padre) != JFileChooser.APPROVE_OPTION) {
             return null;
