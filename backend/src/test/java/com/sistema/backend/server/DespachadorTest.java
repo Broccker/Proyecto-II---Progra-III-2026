@@ -66,7 +66,7 @@ class DespachadorTest {
     }
 
     @Test
-    @DisplayName("Devuelve el resultado del servicio y admite el nuevo id nulo")
+    @DisplayName("Devuelve el resultado y conserva los parámetros opcionales nulos")
     void devuelveElResultadoYConservaNulosOpcionales() {
         Reserva reserva = DatosPrueba.reserva();
         when(servicio.crearReserva(anyString(), anyString(), any(LocalDate.class),
@@ -80,6 +80,10 @@ class DespachadorTest {
         despachador.ejecutar(Solicitud.de(Operacion.MODIFICAR_CATEGORIA,
                 DatosPrueba.ID_CATEGORIA, null, "Salas"));
         verify(servicio).modificarCategoria(DatosPrueba.ID_CATEGORIA, null, "Salas");
+
+        // El filtro "Todas las categorías" viaja como nulo; debe aceptarse.
+        despachador.ejecutar(Solicitud.de(Operacion.FILTRAR_RECURSOS, null, "Proyector"));
+        verify(servicio).filtrarRecursos(null, "Proyector");
     }
 
     @Test

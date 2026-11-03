@@ -95,7 +95,7 @@ public final class Despachador {
             case LISTAR_RECURSOS -> servicio.listarRecursos();
             case BUSCAR_RECURSOS -> servicio.buscarRecursos(texto(solicitud, 0));
             case FILTRAR_RECURSOS ->
-                    servicio.filtrarRecursos(texto(solicitud, 0), texto(solicitud, 1));
+                    servicio.filtrarRecursos(textoONulo(solicitud, 0), texto(solicitud, 1));
 
             // Reservas
             case CREAR_RESERVA -> servicio.crearReserva(texto(solicitud, 0),
