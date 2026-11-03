@@ -19,20 +19,10 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.mindrot.jbcrypt.BCrypt;
 
-/**
- * Base de las pruebas de integración de los DAO.
- *
- * <p>Al arrancar la JVM recrea la base {@code proyectoII_reservas_test} con el
- * esquema real y abre un pool HikariCP pequeño. Antes de cada prueba deja las
- * tablas vacías para que los resultados sean independientes.</p>
- *
- * <p>Si MySQL no está disponible, las pruebas se marcan como omitidas con un
- * mensaje claro en el reporte de Failsafe, en lugar de romper la compilación
- * de un compañero que solo está trabajando en el frontend.</p>
- */
+
 public abstract class PruebaBDBase {
 
-    /** Clave de prueba hasheada una sola vez para todas las pruebas. */
+
     protected static final String CLAVE_HASH = BCrypt.hashpw("clave", BCrypt.gensalt(4));
 
     private static final Set<String> TABLAS = Set.of(
@@ -105,10 +95,7 @@ public abstract class PruebaBDBase {
         return reserva;
     }
 
-    /**
-     * Ejecuta una sentencia de apoyo (por ejemplo, para preparar un caso de
-     * clave foránea). No se usa para probar los DAO.
-     */
+
     protected int ejecutar(String sql, Object... parametros) {
         try (Connection conexion = fuente().conectar();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {

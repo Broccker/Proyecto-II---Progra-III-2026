@@ -5,10 +5,7 @@ import com.sistema.common.modelo.Recurso;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Estado del módulo de recursos: catálogo de categorías para los filtros, lista
- * visible, criterios de búsqueda y recurso seleccionado.
- */
+
 public final class ModeloRecursos {
 
     private List<Recurso> recursos = List.of();

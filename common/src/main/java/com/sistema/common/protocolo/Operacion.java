@@ -1,13 +1,6 @@
 package com.sistema.common.protocolo;
 
-/**
- * Operaciones que el frontend puede solicitar al backend.
- *
- * <p>Cada constante corresponde <strong>1:1</strong> con un método de
- * {@link com.sistema.common.servicio.Service}; el nombre del método y la
- * cantidad de parámetros se guardan aquí para que el servidor pueda validar
- * las solicitudes y para que una prueba compruebe que no falte ninguna.</p>
- */
+
 public enum Operacion {
 
     INICIAR_SESION("iniciarSesion", 2),
@@ -55,16 +48,12 @@ public enum Operacion {
         this.cantidadParametros = cantidadParametros;
     }
 
-    /**
-     * Nombre del método de {@code Service} que atiende esta operación.
-     */
+
     public String metodo() {
         return metodo;
     }
 
-    /**
-     * Cantidad exacta de parámetros que debe traer la {@link Solicitud}.
-     */
+
     public int cantidadParametros() {
         return cantidadParametros;
     }

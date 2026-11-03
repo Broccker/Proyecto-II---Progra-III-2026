@@ -20,13 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mockito.Mock;
 
-/**
- * Base de las pruebas unitarias de {@link ServiceImpl}.
- *
- * <p>Los DAO y el cliente de IA se simulan con Mockito. El reloj se fija en
- * un lunes a las 10:00 (UTC) para que las reglas de reservas futuras y las
- * matrices semanales sean deterministas.</p>
- */
+
 abstract class PruebaServicioBase {
 
     protected static final Clock RELOJ =

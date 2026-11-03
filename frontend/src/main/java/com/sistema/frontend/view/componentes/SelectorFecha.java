@@ -19,10 +19,7 @@ import javax.swing.JTextField;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
-/**
- * Selector de fecha: campo de texto para escribirla y un botón que abre un
- * calendario mensual en un menú flotante.
- */
+
 public final class SelectorFecha extends JPanel {
 
     public static final DateTimeFormatter FORMATO = DateTimeFormatter.ofPattern("dd/MM/uuuu")
@@ -102,11 +99,7 @@ public final class SelectorFecha extends JPanel {
         pintarCalendario();
     }
 
-    /**
-     * Devuelve la fecha escrita o elegida en el calendario.
-     *
-     * @throws IllegalArgumentException si el formato no es {@code dd/MM/yyyy}
-     */
+
     public LocalDate getFecha() {
         String texto = campoTexto.getText().trim();
         if (texto.isEmpty()) {
@@ -120,7 +113,7 @@ public final class SelectorFecha extends JPanel {
         }
     }
 
-    /** Cambia la fecha mostrada. */
+
     public void setFecha(LocalDate nueva) {
         if (nueva == null) {
             return;
@@ -160,7 +153,7 @@ public final class SelectorFecha extends JPanel {
         try {
             menu.show(botonCalendario, 0, botonCalendario.getHeight());
         } catch (RuntimeException ex) {
-            // Sin ventana visible (entornos headless): no hay nada que mostrar.
+
         }
     }
 

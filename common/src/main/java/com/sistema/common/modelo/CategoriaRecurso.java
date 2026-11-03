@@ -4,9 +4,7 @@ import com.sistema.common.excepciones.ValidacionException;
 import java.io.Serializable;
 import java.util.Objects;
 
-/**
- * Categoría a la que pertenece un recurso (proyectores, salas, etc.).
- */
+
 public class CategoriaRecurso implements Serializable {
 
     private static final long serialVersionUID = 1L;

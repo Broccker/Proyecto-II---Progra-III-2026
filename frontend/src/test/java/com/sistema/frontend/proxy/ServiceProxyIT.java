@@ -29,14 +29,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/**
- * Pruebas de integración del {@link ServiceProxy} contra un servidor de
- * prueba que habla el protocolo real.
- *
- * <p>Cubren el criterio de la Fase 7: la conexión, el emparejamiento de
- * respuestas por identificador, las notificaciones asincrónicas y los fallos
- * de red. No requieren MySQL ni el módulo backend.</p>
- */
+
 @Timeout(25)
 class ServiceProxyIT {
 
@@ -136,7 +129,7 @@ class ServiceProxyIT {
                         ejecutor.submit(proxy::listarCategorias);
                 servidor.esperarSolicitudes(1);
 
-                // La segunda respuesta se envía antes que la primera.
+
                 List<Funcionario> funcionarios = proxy.listarFuncionarios();
                 assertEquals(List.of(DatosPrueba.funcionario()), funcionarios);
 
@@ -254,7 +247,7 @@ class ServiceProxyIT {
                 proxy.agregarEscucha(new EscuchaNotificaciones() {
                     @Override
                     public void alRecibir(Notificacion notificacion) {
-                        // No se esperan notificaciones en esta prueba.
+
                     }
 
                     @Override

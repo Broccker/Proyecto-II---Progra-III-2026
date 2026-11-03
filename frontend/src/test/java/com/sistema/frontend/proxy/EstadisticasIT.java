@@ -18,13 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/**
- * Estadísticas contra un servidor que habla el protocolo real.
- *
- * <p>Comprueba que el proxy transporta los conteos agregados y que la tabla y
- * el gráfico muestran exactamente las cifras que devolvió el backend. No
- * requiere MySQL: el servidor de prueba responde los conteos ya calculados.</p>
- */
+
 @Timeout(30)
 class EstadisticasIT {
 

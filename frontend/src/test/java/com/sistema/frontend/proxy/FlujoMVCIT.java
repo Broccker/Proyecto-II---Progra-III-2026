@@ -20,13 +20,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/**
- * Flujo MVC completo contra un servidor que habla el protocolo real.
- *
- * <p>Comprueba el criterio de la Fase 8: la vista recoge los datos, el
- * controlador los envía por el proxy, el "backend" responde y el modelo y la
- * tabla del frontend reflejan el resultado. No requiere MySQL.</p>
- */
+
 @Timeout(25)
 class FlujoMVCIT {
 

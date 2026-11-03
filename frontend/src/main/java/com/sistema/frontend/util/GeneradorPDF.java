@@ -22,28 +22,20 @@ import java.nio.file.Path;
 import java.util.List;
 import javax.imageio.ImageIO;
 
-/**
- * Genera reportes PDF con una tabla y, opcionalmente, un gráfico.
- *
- * <p>La generación ocurre en el frontend: el backend solo entrega los datos.</p>
- */
+
 public final class GeneradorPDF {
 
     private GeneradorPDF() {
     }
 
-    /**
-     * Genera un PDF con el título y la tabla indicados.
-     */
+
     public static void generarTabla(String titulo, String[] encabezados,
                                     List<String[]> filas, Path destino)
             throws DocumentException, IOException {
         generarTablaConGrafico(titulo, encabezados, filas, null, destino);
     }
 
-    /**
-     * Genera un PDF con el título, un gráfico opcional y la tabla indicada.
-     */
+
     public static void generarTablaConGrafico(String titulo, String[] encabezados,
                                               List<String[]> filas, BufferedImage imagen,
                                               Path destino)
@@ -85,8 +77,8 @@ public final class GeneradorPDF {
                 }
                 documento.add(tabla);
             } finally {
-                // El cierre del documento escribe el final del PDF: debe
-                // ocurrir antes de que se cierre el flujo de salida.
+
+
                 if (documento.isOpen()) {
                     documento.close();
                 }

@@ -15,12 +15,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-/**
- * Vista de ingreso al sistema.
- *
- * <p>No conoce el proxy ni las reglas de negocio: solo recoge las credenciales
- * y expone acciones que el controlador conecta.</p>
- */
+
 public final class VistaLogin extends JPanel {
 
     private static final String TITULO = "Ingreso";
@@ -100,17 +95,17 @@ public final class VistaLogin extends JPanel {
         }
     }
 
-    /** Asocia la acción del botón Ingresar (y de Intro en la clave). */
+
     public void alIngresar(Runnable accion) {
         accionIngresar = accion;
     }
 
-    /** Asocia la acción del botón Cambiar clave. */
+
     public void alCambiarClave(Runnable accion) {
         accionCambiarClave = accion;
     }
 
-    /** Asocia la acción del botón Salir. */
+
     public void alSalir(Runnable accion) {
         accionSalir = accion;
     }
@@ -142,7 +137,7 @@ public final class VistaLogin extends JPanel {
         campoId.requestFocusInWindow();
     }
 
-    /** Habilita o deshabilita el formulario mientras se espera al backend. */
+
     public void habilitar(boolean habilitado) {
         campoId.setEnabled(habilitado);
         campoClave.setEnabled(habilitado);
@@ -162,7 +157,7 @@ public final class VistaLogin extends JPanel {
         Dialogos.error(this, TITULO, mensaje);
     }
 
-    /** Tamaño preferido de la ventana de ingreso. */
+
     public Dimension tamanoPreferido() {
         return new Dimension(440, 300);
     }

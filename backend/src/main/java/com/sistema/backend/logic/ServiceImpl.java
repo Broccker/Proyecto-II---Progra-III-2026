@@ -42,20 +42,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.mindrot.jbcrypt.BCrypt;
 
-/**
- * Implementación de la capa lógica del backend.
- *
- * <p>Todas las reglas del Proyecto #1 se validan aquí, del lado servidor,
- * aunque el frontend también valide: credenciales BCrypt, unicidad de
- * identificadores y descripciones, coherencia de fechas y horas, pertenencia
- * de la reserva al funcionario, disponibilidad de recursos y límites de las
- * columnas de MySQL.</p>
- *
- * <p>El recurso elegido para cada categoría se comprueba dos veces: aquí para
- * dar un mensaje descriptivo y en {@link ReservaDAO#insertar} dentro de una
- * transacción con {@code SELECT ... FOR UPDATE}, que es la garantía real
- * frente a dos peticiones simultáneas.</p>
- */
+
 public final class ServiceImpl implements Service {
 
     private static final int MAX_ID = 20;
@@ -77,12 +64,7 @@ public final class ServiceImpl implements Service {
     private final ClienteIA clienteIA;
     private final Clock reloj;
 
-    /**
-     * Serie de identificadores y creación de reservas. Un solo backend atiende
-     * a todos los clientes, así que este bloqueo evita que dos peticiones
-     * simultáneas calculen el mismo {@code CAT-...} o {@code RES-...}. La
-     * transacción del DAO sigue siendo la garantía frente a otras instancias.
-     */
+
     private final Object bloqueoAltas = new Object();
 
     public ServiceImpl(FuenteDatos fuente, ConfiguracionBackend configuracion) {
@@ -93,10 +75,7 @@ public final class ServiceImpl implements Service {
                 Clock.systemDefaultZone());
     }
 
-    /**
-     * Constructor para pruebas: permite inyectar DAOs simulados, un cliente de
-     * IA falso y un reloj fijo para las reglas de fechas.
-     */
+
     public ServiceImpl(UsuarioDAO usuarioDAO, CategoriaRecursoDAO categoriaDAO,
                        RecursoDAO recursoDAO, ReservaDAO reservaDAO,
                        ClienteIA clienteIA, Clock reloj) {
@@ -109,9 +88,6 @@ public final class ServiceImpl implements Service {
         this.reloj = Objects.requireNonNull(reloj, "El reloj es obligatorio.");
     }
 
-    // ------------------------------------------------------------------
-    // Sesión
-    // ------------------------------------------------------------------
 
     @Override
     public Usuario iniciarSesion(String id, String clave) {
@@ -121,7 +97,7 @@ public final class ServiceImpl implements Service {
         Optional<Usuario> usuario = usuarioDAO.buscarPorId(identificador);
         Optional<String> hash = usuarioDAO.buscarClaveHash(identificador);
         if (usuario.isEmpty() || hash.isEmpty() || !coincide(clave, hash.get())) {
-            // El mismo mensaje evita revelar si el identificador existe.
+
             throw new AutenticacionException("Identificador o clave incorrectos.");
         }
         return usuario.get();
@@ -149,14 +125,7 @@ public final class ServiceImpl implements Service {
         usuarioDAO.actualizarClave(identificador, BCrypt.hashpw(nuevaClave, BCrypt.gensalt()));
     }
 
-    // ------------------------------------------------------------------
-    // Funcionarios
-    // ------------------------------------------------------------------
 
-    /**
-     * Da de alta un funcionario. La clave inicial es su propio identificador,
-     * como en el Proyecto #1; se guarda siempre como hash BCrypt.
-     */
     @Override
     public void altaFuncionario(String id, String nombre, String telefono) {
         String identificador = Validaciones.texto(id, "El identificador del funcionario", MAX_ID);
@@ -186,8 +155,8 @@ public final class ServiceImpl implements Service {
     @Override
     public void eliminarFuncionario(String id) {
         Funcionario existente = buscarFuncionario(id);
-        // Se conserva el historial: tanto las reservas activas como las
-        // canceladas impiden borrar al funcionario.
+
+
         if (!reservaDAO.listarPorFuncionario(existente.getId()).isEmpty()) {
             throw new ConflictoException(
                     "No se puede eliminar al funcionario porque tiene reservas registradas.");
@@ -205,9 +174,6 @@ public final class ServiceImpl implements Service {
         return usuarioDAO.buscarFuncionarios(criterio);
     }
 
-    // ------------------------------------------------------------------
-    // Categorías de recursos
-    // ------------------------------------------------------------------
 
     @Override
     public CategoriaRecurso altaCategoria(String descripcion) {
@@ -243,7 +209,7 @@ public final class ServiceImpl implements Service {
             if (categoriaDAO.existeDescripcion(texto, actual)) {
                 throw new ConflictoException("Ya existe una categoría con esa descripción.");
             }
-            // ON UPDATE CASCADE propaga el nuevo id a los recursos.
+
             categoriaDAO.actualizar(actual, new CategoriaRecurso(destino, texto));
         }
     }
@@ -278,9 +244,6 @@ public final class ServiceImpl implements Service {
         return categoriaDAO.existeDescripcion(descripcion);
     }
 
-    // ------------------------------------------------------------------
-    // Recursos
-    // ------------------------------------------------------------------
 
     @Override
     public void altaRecurso(String id, String categoriaId, String descripcion) {
@@ -360,9 +323,6 @@ public final class ServiceImpl implements Service {
         return recursoDAO.filtrar(categoriaId, criterio);
     }
 
-    // ------------------------------------------------------------------
-    // Reservas
-    // ------------------------------------------------------------------
 
     @Override
     public Reserva crearReserva(String funcionarioId, String actividad, LocalDate fecha,
@@ -453,9 +413,6 @@ public final class ServiceImpl implements Service {
         return reservaDAO.listarActivasEntre(desde, hasta);
     }
 
-    // ------------------------------------------------------------------
-    // Actividades y calendarización
-    // ------------------------------------------------------------------
 
     @Override
     public MatrizActividades construirMatrizActividades(LocalDate fecha) {
@@ -525,9 +482,6 @@ public final class ServiceImpl implements Service {
         return new MatrizCalendarizacion(fecha, categoria, recursos, horas, filas);
     }
 
-    // ------------------------------------------------------------------
-    // Estadísticas
-    // ------------------------------------------------------------------
 
     @Override
     public List<ConteoCategoria> categoriasReservadas(LocalDate desde, LocalDate hasta) {
@@ -541,9 +495,6 @@ public final class ServiceImpl implements Service {
         return reservaDAO.contarActividadesPorSemana(desde, hasta);
     }
 
-    // ------------------------------------------------------------------
-    // Extracción con IA
-    // ------------------------------------------------------------------
 
     @Override
     public DatosReservaSugerida extraerDatosReserva(String frase) {
@@ -557,9 +508,6 @@ public final class ServiceImpl implements Service {
                 mapeo.noEncontradas());
     }
 
-    // ------------------------------------------------------------------
-    // Apoyo
-    // ------------------------------------------------------------------
 
     private Funcionario buscarFuncionario(String id) {
         String identificador = Validaciones.texto(id, "El funcionario", MAX_ID);
@@ -611,7 +559,7 @@ public final class ServiceImpl implements Service {
         try {
             return BCrypt.checkpw(clave, hash);
         } catch (IllegalArgumentException ex) {
-            // Hash malformado o de otro algoritmo: no se autentica.
+
             return false;
         }
     }
@@ -624,10 +572,7 @@ public final class ServiceImpl implements Service {
         return List.copyOf(horas);
     }
 
-    /**
-     * Una reserva ocupa el bloque de una hora si su intervalo se cruza con él.
-     * Así una reserva de 09:30 a 10:30 aparece en las filas de 09:00 y 10:00.
-     */
+
     private static boolean seSolapa(LocalTime inicio, LocalTime fin, LocalTime hora) {
         int inicioBloque = hora.toSecondOfDay() / 60;
         int finBloque = inicioBloque + 60;

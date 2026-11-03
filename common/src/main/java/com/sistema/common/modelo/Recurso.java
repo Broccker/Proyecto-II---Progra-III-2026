@@ -4,9 +4,7 @@ import com.sistema.common.excepciones.ValidacionException;
 import java.io.Serializable;
 import java.util.Objects;
 
-/**
- * Recurso físico que se puede reservar (proyector, sala, laptop, etc.).
- */
+
 public class Recurso implements Serializable {
 
     private static final long serialVersionUID = 1L;

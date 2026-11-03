@@ -11,26 +11,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Properties;
 
-/**
- * Configuración del backend, leída de un archivo {@code .properties}.
- *
- * <p>Orden de búsqueda al usar {@link #cargar()}:</p>
- * <ol>
- *   <li>La ruta indicada con {@code -Dbackend.config=/ruta/backend.properties}.</li>
- *   <li>La variable de entorno {@code BACKEND_CONFIG}.</li>
- *   <li>El recurso {@code /backend.properties} del classpath.</li>
- * </ol>
- *
- * <p>Además, las propiedades del sistema {@code bd.url}, {@code bd.usuario},
- * {@code bd.clave}, {@code bd.pool.tamano}, {@code servidor.puerto},
- * {@code llm.api.url}, {@code llm.api.key} y {@code llm.model} sobrescriben
- * el archivo. Así se pueden inyectar credenciales en otro equipo sin editar
- * el archivo versionado.</p>
- *
- * <p>Las credenciales nunca se escriben en el código: viven en el archivo
- * {@code backend.properties}, que está en {@code .gitignore}. La clave del
- * proveedor de IA solo existe en el backend: el frontend nunca la recibe.</p>
- */
+
 public record ConfiguracionBackend(
         String urlBd,
         String usuarioBd,
@@ -46,9 +27,7 @@ public record ConfiguracionBackend(
     private static final int POOL_POR_DEFECTO = 10;
     private static final String MODELO_IA_POR_DEFECTO = "gpt-4o-mini";
 
-    /**
-     * Constructor de compatibilidad para configuraciones sin servicio de IA.
-     */
+
     public ConfiguracionBackend(String urlBd, String usuarioBd, String claveBd,
                                 int puertoServidor, int tamanoPool) {
         this(urlBd, usuarioBd, claveBd, puertoServidor, tamanoPool,
@@ -80,9 +59,7 @@ public record ConfiguracionBackend(
                 ? MODELO_IA_POR_DEFECTO : modeloIA.trim();
     }
 
-    /**
-     * Carga la configuración con el orden de búsqueda documentado en la clase.
-     */
+
     public static ConfiguracionBackend cargar() {
         String rutaExterna = System.getProperty("backend.config");
         if (rutaExterna == null || rutaExterna.isBlank()) {
@@ -93,10 +70,7 @@ public record ConfiguracionBackend(
                 : desdeArchivo(Path.of(rutaExterna));
     }
 
-    /**
-     * Carga un archivo de configuración concreto del classpath.
-     * Pensado para las pruebas de integración ({@code /backend-test.properties}).
-     */
+
     public static ConfiguracionBackend desdeClasspath(String recurso) {
         try (InputStream entrada = ConfiguracionBackend.class.getResourceAsStream(recurso)) {
             if (entrada == null) {
@@ -114,9 +88,7 @@ public record ConfiguracionBackend(
         }
     }
 
-    /**
-     * Carga un archivo de configuración del sistema de archivos.
-     */
+
     public static ConfiguracionBackend desdeArchivo(Path archivo) {
         Objects.requireNonNull(archivo, "La ruta del archivo de configuración es obligatoria.");
         if (!Files.isRegularFile(archivo)) {

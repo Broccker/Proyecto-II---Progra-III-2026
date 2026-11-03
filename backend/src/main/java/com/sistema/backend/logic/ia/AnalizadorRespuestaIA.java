@@ -11,13 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-/**
- * Interpreta la respuesta del proveedor de IA.
- *
- * <p>Acepta tanto el objeto JSON directo como la envoltura habitual de las
- * API de chat ({@code choices[0].message.content}). Si el modelo agrega texto
- * alrededor del JSON, se busca el primer objeto válido.</p>
- */
+
 public class AnalizadorRespuestaIA {
 
     private static final DateTimeFormatter FORMATO_HORA = DateTimeFormatter.ofPattern("HH:mm");
@@ -76,7 +70,7 @@ public class AnalizadorRespuestaIA {
                     }
                 }
             } catch (JSONException ignorado) {
-                // Se prueba el siguiente objeto encontrado en la respuesta.
+
             }
         }
         throw new ValidacionException(

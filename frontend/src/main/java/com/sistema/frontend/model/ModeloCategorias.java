@@ -4,10 +4,7 @@ import com.sistema.common.modelo.CategoriaRecurso;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Estado del módulo de categorías: listado visible, criterio de búsqueda y
- * categoría seleccionada.
- */
+
 public final class ModeloCategorias {
 
     private List<CategoriaRecurso> categorias = List.of();

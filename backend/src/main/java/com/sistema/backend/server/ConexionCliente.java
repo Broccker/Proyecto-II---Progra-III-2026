@@ -10,14 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Conexión con un frontend: socket, flujos del protocolo e identificador.
- *
- * <p>Las escrituras se serializan con {@link #bloqueoSalida} porque el hilo que
- * atiende la petición y el hilo que difunde una notificación pueden querer
- * escribir en el mismo socket. Sin ese bloqueo los dos flujos se mezclarían y
- * el cliente no podría deserializar los mensajes.</p>
- */
+
 public final class ConexionCliente implements ClienteConectado {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConexionCliente.class);
@@ -29,11 +22,7 @@ public final class ConexionCliente implements ClienteConectado {
     private final Object bloqueoSalida = new Object();
     private final AtomicBoolean cerrada = new AtomicBoolean(false);
 
-    /**
-     * Crea los flujos del protocolo. El flujo de salida se crea y se vacía
-     * antes del de entrada para que ambos extremos intercambien sus cabeceras
-     * sin quedarse bloqueados.
-     */
+
     public ConexionCliente(Socket socket, String id) throws IOException {
         this.socket = Objects.requireNonNull(socket, "El socket del cliente es obligatorio.");
         if (id == null || id.isBlank()) {
@@ -65,9 +54,7 @@ public final class ConexionCliente implements ClienteConectado {
         }
     }
 
-    /**
-     * Lee el siguiente mensaje enviado por el cliente.
-     */
+
     public Object leer() throws IOException, ClassNotFoundException {
         return Protocolo.recibir(entrada);
     }

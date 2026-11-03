@@ -12,9 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Acceso a la tabla {@code recursos}, siempre junto con su categoría.
- */
+
 public final class RecursoDAO extends DAOBase {
 
     private static final String SELECT_BASE = """
@@ -45,10 +43,7 @@ public final class RecursoDAO extends DAOBase {
         });
     }
 
-    /**
-     * Busca por identificador, descripción o nombre de la categoría.
-     * Un criterio vacío devuelve todos.
-     */
+
     public List<Recurso> buscar(String criterio) {
         String patron = "%" + (criterio == null ? "" : criterio.trim()) + "%";
         return enConsulta("buscar recursos", conexion -> {
@@ -66,9 +61,7 @@ public final class RecursoDAO extends DAOBase {
         });
     }
 
-    /**
-     * Filtra por categoría (opcional) y criterio de texto (opcional).
-     */
+
     public List<Recurso> filtrar(String categoriaId, String criterio) {
         String patron = "%" + (criterio == null ? "" : criterio.trim()) + "%";
         boolean conCategoria = categoriaId != null && !categoriaId.isBlank();
@@ -116,13 +109,7 @@ public final class RecursoDAO extends DAOBase {
         });
     }
 
-    /**
-     * Indica si otra descripción de la misma categoría ya existe.
-     *
-     * @param categoriaId categoría donde se busca
-     * @param descripcion descripción a comprobar
-     * @param excluirId   recurso a excluir (al modificar), o {@code null}
-     */
+
     public boolean existeDescripcionEnCategoria(String categoriaId, String descripcion,
                                                 String excluirId) {
         Objects.requireNonNull(categoriaId, "La categoría es obligatoria.");
@@ -159,10 +146,7 @@ public final class RecursoDAO extends DAOBase {
         });
     }
 
-    /**
-     * Actualiza identificador, categoría y descripción. El identificador puede
-     * cambiar: {@code reserva_recursos} usa {@code ON UPDATE CASCADE}.
-     */
+
     public void actualizar(String idOriginal, Recurso recurso) {
         Objects.requireNonNull(idOriginal, "El identificador original es obligatorio.");
         Objects.requireNonNull(recurso, "El recurso es obligatorio.");

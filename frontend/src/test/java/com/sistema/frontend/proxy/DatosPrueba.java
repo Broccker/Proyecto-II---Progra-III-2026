@@ -10,9 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-/**
- * Datos compartidos por las pruebas del proxy.
- */
+
 final class DatosPrueba {
 
     static final String ID_FUNCIONARIO = "222";

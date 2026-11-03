@@ -1,31 +1,10 @@
--- =====================================================================
--- Proyecto #2 - Sistema de Reserva de Recursos
--- Datos iniciales de ejemplo (MySQL 8.4 LTS).
---
--- Ejecutar DESPUÉS de schema.sql:
---   mysql -u root -p --default-character-set=utf8mb4 < datos_iniciales.sql
---
--- Usuarios de prueba (la clave es el mismo número del identificador,
--- almacenada con hash BCrypt):
---   111 / 111  -> Administrador
---   222 / 222  -> Funcionario (Ana Pérez)
---   333 / 333  -> Funcionario (Luis Rojas)
---   444 / 444  -> Funcionario (Pedro Pérez)
---
--- Las fechas de las reservas son relativas a la fecha de ejecución
--- (CURDATE()), para que las estadísticas y la calendarización siempre
--- muestren información reciente.
--- =====================================================================
-
 USE proyectoII_reservas;
 
 SET NAMES utf8mb4;
 
 START TRANSACTION;
 
--- ---------------------------------------------------------------------
--- Usuarios
--- ---------------------------------------------------------------------
+
 INSERT INTO usuarios (id, clave_hash, rol, nombre, telefono) VALUES
     ('111', '$2a$10$FHA97XNOke7VLgRbprpmPOmkISAfL4NHEjfm2TGJwBWBmxO3Puolu',
      'ADMINISTRADOR', NULL, NULL),
@@ -36,18 +15,14 @@ INSERT INTO usuarios (id, clave_hash, rol, nombre, telefono) VALUES
     ('444', '$2a$10$Dx4d7UBXVfskxhcG56fuAuEtuGoLy0Dr62Z0S7QfBoIHmNaY58eW.',
      'FUNCIONARIO', 'Pedro Pérez', '88884444');
 
--- ---------------------------------------------------------------------
--- Categorías de recursos
--- ---------------------------------------------------------------------
+
 INSERT INTO categorias (id, descripcion) VALUES
     ('CAT-000001', 'Proyectores'),
     ('CAT-000002', 'Salas de reuniones'),
     ('CAT-000003', 'Computadoras'),
     ('CAT-000004', 'Herramientas');
 
--- ---------------------------------------------------------------------
--- Recursos
--- ---------------------------------------------------------------------
+
 INSERT INTO recursos (id, categoria_id, descripcion) VALUES
     ('1001', 'CAT-000001', 'Proyector Epson EB-X51'),
     ('1002', 'CAT-000001', 'Proyector ViewSonic PX701'),
@@ -58,9 +33,7 @@ INSERT INTO recursos (id, categoria_id, descripcion) VALUES
     ('4001', 'CAT-000004', 'Kit de Precisión Xiaomi'),
     ('4002', 'CAT-000004', 'Kit de Precisión Imexx');
 
--- ---------------------------------------------------------------------
--- Reservas de ejemplo (actividades pasadas, futuras y una cancelada)
--- ---------------------------------------------------------------------
+
 INSERT INTO reservas (id, funcionario_id, actividad, fecha, hora_inicio, hora_fin, estado) VALUES
     ('RES-000001', '222', 'Presentaciones (Hardware)',
      DATE_SUB(CURDATE(), INTERVAL 13 DAY), '08:00', '10:00', 'ACTIVA'),
@@ -77,32 +50,30 @@ INSERT INTO reservas (id, funcionario_id, actividad, fecha, hora_inicio, hora_fi
     ('RES-000007', '444', 'Taller de Robótica',
      DATE_SUB(CURDATE(), INTERVAL 5 DAY), '10:00', '12:00', 'CANCELADA');
 
--- ---------------------------------------------------------------------
--- Detalle de recursos por reserva
--- ---------------------------------------------------------------------
+
 INSERT INTO reserva_recursos (reserva_id, recurso_id) VALUES
-    -- Presentaciones (Hardware): proyector, sala, laptop y kit
+
     ('RES-000001', '1001'),
     ('RES-000001', '2001'),
     ('RES-000001', '3001'),
     ('RES-000001', '4001'),
-    -- Reunión de Directores
+
     ('RES-000002', '1001'),
     ('RES-000002', '2001'),
-    -- Expo Laboral
+
     ('RES-000003', '1002'),
     ('RES-000003', '2002'),
-    -- Sesión de Estudiantes
+
     ('RES-000004', '2001'),
     ('RES-000004', '3002'),
-    -- Capacitación Docente
+
     ('RES-000005', '1001'),
     ('RES-000005', '2002'),
     ('RES-000005', '3001'),
-    -- Mantenimiento de Equipos
+
     ('RES-000006', '4001'),
     ('RES-000006', '4002'),
-    -- Taller de Robótica (cancelada)
+
     ('RES-000007', '1001'),
     ('RES-000007', '2001');
 

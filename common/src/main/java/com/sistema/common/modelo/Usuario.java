@@ -4,12 +4,7 @@ import com.sistema.common.excepciones.ValidacionException;
 import java.io.Serializable;
 import java.util.Objects;
 
-/**
- * Usuario del sistema. Puede ser administrador o funcionario.
- *
- * <p>El modelo <strong>no contiene la clave</strong>: el hash solo existe en el
- * backend, de modo que nunca se envía por la red ni se muestra en el frontend.</p>
- */
+
 public abstract class Usuario implements Serializable {
 
     private static final long serialVersionUID = 1L;

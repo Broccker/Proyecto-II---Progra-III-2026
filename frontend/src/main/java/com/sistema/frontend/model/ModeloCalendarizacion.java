@@ -5,10 +5,7 @@ import com.sistema.common.modelo.CategoriaRecurso;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Estado de la calendarización: categorías disponibles, categoría consultada y
- * matriz cargada.
- */
+
 public final class ModeloCalendarizacion {
 
     private List<CategoriaRecurso> categorias = List.of();

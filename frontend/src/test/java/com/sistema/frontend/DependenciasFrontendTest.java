@@ -7,13 +7,7 @@ import java.io.IOException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Guardia de arquitectura del módulo frontend.
- *
- * <p>Verifica que el cliente no pueda cargar el driver de MySQL, el pool de
- * conexiones ni ninguna clase del backend: si alguien agrega esa dependencia
- * al POM, la prueba falla y la separación Frontend–Backend se mantiene.</p>
- */
+
 class DependenciasFrontendTest {
 
     @Test

@@ -9,15 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Traduce una {@link Solicitud} del protocolo a la llamada correspondiente de
- * {@link Service}.
- *
- * <p>El {@code switch} es exhaustivo sobre {@link com.sistema.common.protocolo.Operacion}:
- * si en el futuro se agrega una operación, el compilador obliga a atenderla
- * aquí. La cantidad de parámetros ya fue validada por {@code Solicitud}; esta
- * clase comprueba además que cada valor tenga el tipo que espera el método.</p>
- */
+
 public final class Despachador {
 
     private final Service servicio;
@@ -26,15 +18,11 @@ public final class Despachador {
         this.servicio = Objects.requireNonNull(servicio, "El servicio es obligatorio.");
     }
 
-    /**
-     * Ejecuta la operación de la solicitud y devuelve su resultado.
-     *
-     * @throws ValidacionException si un parámetro no tiene el tipo esperado
-     */
+
     public Object ejecutar(Solicitud solicitud) {
         Objects.requireNonNull(solicitud, "La solicitud es obligatoria.");
         return switch (solicitud.operacion()) {
-            // Sesión
+
             case INICIAR_SESION ->
                     servicio.iniciarSesion(texto(solicitud, 0), texto(solicitud, 1));
             case CAMBIAR_CLAVE -> {
@@ -43,7 +31,7 @@ public final class Despachador {
                 yield null;
             }
 
-            // Funcionarios
+
             case ALTA_FUNCIONARIO -> {
                 servicio.altaFuncionario(texto(solicitud, 0), texto(solicitud, 1),
                         texto(solicitud, 2));
@@ -61,7 +49,7 @@ public final class Despachador {
             case LISTAR_FUNCIONARIOS -> servicio.listarFuncionarios();
             case BUSCAR_FUNCIONARIOS -> servicio.buscarFuncionarios(texto(solicitud, 0));
 
-            // Categorías
+
             case ALTA_CATEGORIA -> servicio.altaCategoria(texto(solicitud, 0));
             case MODIFICAR_CATEGORIA -> {
                 servicio.modificarCategoria(texto(solicitud, 0), textoONulo(solicitud, 1),
@@ -77,7 +65,7 @@ public final class Despachador {
             case EXISTE_DESCRIPCION_CATEGORIA ->
                     servicio.existeDescripcionCategoria(texto(solicitud, 0));
 
-            // Recursos
+
             case ALTA_RECURSO -> {
                 servicio.altaRecurso(texto(solicitud, 0), texto(solicitud, 1),
                         texto(solicitud, 2));
@@ -97,7 +85,7 @@ public final class Despachador {
             case FILTRAR_RECURSOS ->
                     servicio.filtrarRecursos(textoONulo(solicitud, 0), texto(solicitud, 1));
 
-            // Reservas
+
             case CREAR_RESERVA -> servicio.crearReserva(texto(solicitud, 0),
                     texto(solicitud, 1), fecha(solicitud, 2), hora(solicitud, 3),
                     hora(solicitud, 4), textos(solicitud, 5));
@@ -110,20 +98,20 @@ public final class Despachador {
             case LISTAR_RESERVAS_ACTIVAS_ENTRE ->
                     servicio.listarReservasActivasEntre(fecha(solicitud, 0), fecha(solicitud, 1));
 
-            // Actividades y calendarización
+
             case CONSTRUIR_MATRIZ_ACTIVIDADES ->
                     servicio.construirMatrizActividades(fecha(solicitud, 0));
             case CONSTRUIR_MATRIZ_CALENDARIZACION ->
                     servicio.construirMatrizCalendarizacion(fecha(solicitud, 0),
                             texto(solicitud, 1));
 
-            // Estadísticas
+
             case CATEGORIAS_RESERVADAS ->
                     servicio.categoriasReservadas(fecha(solicitud, 0), fecha(solicitud, 1));
             case ACTIVIDADES_POR_SEMANA ->
                     servicio.actividadesPorSemana(fecha(solicitud, 0), fecha(solicitud, 1));
 
-            // Extracción con IA
+
             case EXTRAER_DATOS_RESERVA -> servicio.extraerDatosReserva(texto(solicitud, 0));
         };
     }

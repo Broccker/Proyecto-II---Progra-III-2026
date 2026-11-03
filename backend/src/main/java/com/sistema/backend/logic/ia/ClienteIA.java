@@ -15,14 +15,7 @@ import java.util.stream.Collectors;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-/**
- * Cliente del proveedor de IA que interpreta frases de reserva.
- *
- * <p>Vive solo en el backend: la URL, la clave y el modelo se leen de
- * {@code backend.properties}, de modo que el frontend nunca recibe
- * credenciales. Si no hay URL configurada, la operación falla con un mensaje
- * claro y el resto del sistema sigue funcionando.</p>
- */
+
 public class ClienteIA {
 
     private static final String PROMPT_BASE =
@@ -52,12 +45,7 @@ public class ClienteIA {
         this.analizador = analizador == null ? new AnalizadorRespuestaIA() : analizador;
     }
 
-    /**
-     * Envía la frase al proveedor y devuelve los datos sin resolver categorías.
-     *
-     * @param frase      texto libre escrito por el usuario
-     * @param categorias categorías actuales, para indicarle al modelo cuáles usar
-     */
+
     public PropuestaIA extraer(String frase, List<CategoriaRecurso> categorias) {
         if (frase == null || frase.isBlank()) {
             throw new ValidacionException("Ingrese una frase para extraer la reserva.");

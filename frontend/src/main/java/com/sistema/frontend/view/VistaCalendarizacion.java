@@ -28,12 +28,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
-/**
- * Vista de la calendarización diaria de una categoría.
- *
- * <p>Muestra una matriz de horas por recurso; las celdas ocupadas se resaltan.
- * La matriz la construye el backend a partir de las reservas.</p>
- */
+
 public final class VistaCalendarizacion extends JPanel {
 
     private static final String TITULO = "Calendarización";
@@ -125,7 +120,7 @@ public final class VistaCalendarizacion extends JPanel {
         return botones;
     }
 
-    /** Repuebla las categorías y, si existe, la matriz cargada. */
+
     public void actualizar() {
         actualizando = true;
         String seleccionada = getCategoriaId();
@@ -196,7 +191,7 @@ public final class VistaCalendarizacion extends JPanel {
         seleccionarCategoria(categoriaId);
     }
 
-    /** Pide el destino del PDF; {@code null} si el usuario canceló. */
+
     public Path elegirDestinoPdf(String nombreSugerido) {
         return SelectorArchivoPdf.elegir(this, nombreSugerido);
     }

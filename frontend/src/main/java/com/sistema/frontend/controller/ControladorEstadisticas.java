@@ -16,14 +16,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import org.jfree.chart.JFreeChart;
 
-/**
- * Controlador de la vista de estadísticas.
- *
- * <p>Cada panel se consulta por separado con su propio rango de fechas. Las
- * consultas agregadas las resuelve el backend en SQL; el controlador solo
- * valida el rango, lanza la petición fuera del hilo de eventos y vuelca el
- * resultado en el modelo.</p>
- */
+
 public final class ControladorEstadisticas {
 
     private static final String[] ENCABEZADOS_RECURSOS = {"Categoría", "Reservas"};
@@ -48,13 +41,13 @@ public final class ControladorEstadisticas {
         vista.alImprimirActividades(this::imprimirActividades);
     }
 
-    /** Carga ambos paneles con sus rangos iniciales. */
+
     public void cargar() {
         consultarRecursos();
         consultarActividades();
     }
 
-    /** Consulta las reservas por categoría del rango del panel de recursos. */
+
     void consultarRecursos() {
         LocalDate desde;
         LocalDate hasta;
@@ -82,7 +75,7 @@ public final class ControladorEstadisticas {
                 });
     }
 
-    /** Consulta las actividades por semana del rango del panel de actividades. */
+
     void consultarActividades() {
         LocalDate desde;
         LocalDate hasta;

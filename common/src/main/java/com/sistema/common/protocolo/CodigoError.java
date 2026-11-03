@@ -8,13 +8,7 @@ import com.sistema.common.excepciones.NoEncontradoException;
 import com.sistema.common.excepciones.ServicioExternoException;
 import com.sistema.common.excepciones.ValidacionException;
 
-/**
- * Clasificación de los errores que el backend devuelve al frontend.
- *
- * <p>El servidor no envía las excepciones reales (pueden contener detalles de
- * SQL o de configuración): traduce el error a un código y un mensaje apto
- * para mostrarse al usuario.</p>
- */
+
 public enum CodigoError {
 
     VALIDACION,
@@ -26,9 +20,7 @@ public enum CodigoError {
     SERVICIO_EXTERNO,
     INTERNO;
 
-    /**
-     * Traduce una excepción de dominio al código que viaja por la red.
-     */
+
     public static CodigoError de(Throwable error) {
         if (error instanceof ValidacionException) {
             return VALIDACION;

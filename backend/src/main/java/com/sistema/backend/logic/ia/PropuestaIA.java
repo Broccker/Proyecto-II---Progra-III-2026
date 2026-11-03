@@ -6,10 +6,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Datos crudos que devuelve el proveedor de IA, antes de resolver los nombres
- * de categoría contra las que existen en el sistema.
- */
+
 public record PropuestaIA(String actividad, LocalDate fecha, LocalTime horaInicio,
                           LocalTime horaFin, List<String> categorias) {
 

@@ -6,16 +6,10 @@ import com.sistema.common.excepciones.ValidacionException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-/**
- * Base común de los DAO: obtiene conexiones del pool, centraliza las
- * transacciones y traduce {@link SQLException} a excepciones de dominio.
- *
- * <p>Los DAO usan siempre {@link java.sql.PreparedStatement} y
- * {@code try-with-resources}; ninguna consulta se arma concatenando valores.</p>
- */
+
 abstract class DAOBase {
 
-    /** Trabajo que se ejecuta con una conexión abierta. */
+
     @FunctionalInterface
     protected interface TrabajoBD<T> {
         T ejecutar(Connection conexion) throws SQLException;
@@ -32,9 +26,7 @@ abstract class DAOBase {
         this.fuente = fuente;
     }
 
-    /**
-     * Ejecuta una consulta o una operación sin transacción explícita.
-     */
+
     protected <T> T enConsulta(String operacion, TrabajoBD<T> trabajo) {
         try (Connection conexion = fuente.conectar()) {
             return trabajo.ejecutar(conexion);
@@ -43,11 +35,7 @@ abstract class DAOBase {
         }
     }
 
-    /**
-     * Ejecuta varias sentencias como una sola unidad atómica: si algo falla,
-     * se revierte todo. Se usa, por ejemplo, al crear una reserva junto con
-     * su detalle de recursos.
-     */
+
     protected <T> T enTransaccion(String operacion, TrabajoBD<T> trabajo) {
         try (Connection conexion = fuente.conectar()) {
             boolean autoCommit = conexion.getAutoCommit();
@@ -66,7 +54,7 @@ abstract class DAOBase {
                 try {
                     conexion.setAutoCommit(autoCommit);
                 } catch (SQLException ignored) {
-                    // La conexión se devuelve al pool de todos modos.
+
                 }
             }
         } catch (SQLException e) {
@@ -78,14 +66,11 @@ abstract class DAOBase {
         try {
             conexion.rollback();
         } catch (SQLException ignored) {
-            // Si el rollback falla, se informa el error original.
+
         }
     }
 
-    /**
-     * Traduce los errores de MySQL más frecuentes a excepciones con mensajes
-     * en español, para que la lógica y el frontend no dependan del driver.
-     */
+
     private static RuntimeException traducir(String operacion, SQLException e) {
         return switch (e.getErrorCode()) {
             case ERROR_DUPLICADO -> new ConflictoException(

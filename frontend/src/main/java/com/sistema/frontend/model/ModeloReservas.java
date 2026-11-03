@@ -5,10 +5,7 @@ import com.sistema.common.modelo.Reserva;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Estado del módulo de reservas: categorías disponibles, reservas del
- * funcionario y reserva seleccionada.
- */
+
 public final class ModeloReservas {
 
     private List<Reserva> reservas = List.of();

@@ -9,13 +9,7 @@ import com.sistema.common.excepciones.ValidacionException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Pruebas unitarias de las validaciones compartidas por la capa lógica.
- *
- * <p>Comprueban los mensajes y los límites que el backend aplica antes de
- * llegar a MySQL, incluido el máximo de bytes que BCrypt considera de una
- * clave.</p>
- */
+
 class ValidacionesTest {
 
     @Test
@@ -72,7 +66,7 @@ class ValidacionesTest {
     @Test
     @DisplayName("El límite de la clave se mide en bytes, no en caracteres")
     void mideLaClaveEnBytes() {
-        // Cada 'á' ocupa dos bytes en UTF-8: 36 caracteres ya superan 72.
+
         assertThrows(ValidacionException.class,
                 () -> Validaciones.clave("á".repeat(37), "La clave"));
     }

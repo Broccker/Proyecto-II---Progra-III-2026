@@ -12,12 +12,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-/**
- * Formulario de cambio de clave.
- *
- * <p>Es un panel, no un diálogo: la ventana que lo contiene la construye el
- * orquestador de la aplicación. Así la vista se puede probar sin pantalla.</p>
- */
+
 public final class VistaCambiarClave extends JPanel {
 
     private static final String TITULO = "Cambio de clave";

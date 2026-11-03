@@ -3,15 +3,7 @@ package com.sistema.common.protocolo;
 import com.sistema.common.excepciones.ValidacionException;
 import java.io.Serializable;
 
-/**
- * Respuesta del backend a una {@link Solicitud}.
- *
- * <p>El {@code id} debe ser exactamente el mismo que envió el cliente. Si
- * {@code exito} es {@code true}, {@code resultado} contiene el valor devuelto
- * por {@code Service} (puede ser {@code null} en operaciones {@code void}) y
- * {@code error} es {@code null}. Si {@code exito} es {@code false}, ocurre lo
- * contrario.</p>
- */
+
 public record Respuesta(String id, boolean exito, Object resultado, ErrorRemoto error)
         implements Serializable {
 

@@ -12,22 +12,13 @@ import com.sistema.common.protocolo.CodigoError;
 import com.sistema.common.protocolo.ErrorRemoto;
 import java.util.Objects;
 
-/**
- * Convierte el error que viaja por la red en la excepción de dominio que el
- * resto del frontend ya conoce.
- *
- * <p>Así los controladores y las vistas manejan {@code ValidacionException},
- * {@code AutenticacionException}, etc., sin saber que hubo un socket de por
- * medio. El mensaje es el que redactó el backend y está listo para mostrarse.</p>
- */
+
 public final class TraductorErrores {
 
     private TraductorErrores() {
     }
 
-    /**
-     * Traduce un {@link ErrorRemoto} a la excepción de dominio equivalente.
-     */
+
     public static RuntimeException aExcepcion(ErrorRemoto error) {
         Objects.requireNonNull(error, "El error remoto es obligatorio.");
         String mensaje = error.mensaje();
@@ -43,10 +34,7 @@ public final class TraductorErrores {
         };
     }
 
-    /**
-     * Indica si un código corresponde a un error de dominio conocido.
-     * Se ofrece para pruebas y para clasificar mensajes en la interfaz.
-     */
+
     public static boolean esDeDominio(CodigoError codigo) {
         return codigo != null && codigo != CodigoError.INTERNO;
     }

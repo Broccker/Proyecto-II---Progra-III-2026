@@ -3,31 +3,24 @@ package com.sistema.frontend.proxy;
 import com.sistema.common.protocolo.Operacion;
 import java.util.Objects;
 
-/**
- * Error de comunicación con el backend.
- *
- * <p>No es un error de dominio: representa que el servidor no está
- * disponible, que la conexión se perdió o que una respuesta no llegó a
- * tiempo. El {@link Motivo} permite que la interfaz decida si conviene
- * reintentar o pedir al usuario que revise la red.</p>
- */
+
 public class ExcepcionRed extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    /** Causa clasificada del fallo de comunicación. */
+
     public enum Motivo {
-        /** No se pudo abrir la conexión con el backend. */
+
         SIN_CONEXION,
-        /** La conexión existente se cerró de forma inesperada. */
+
         CONEXION_PERDIDA,
-        /** El backend no respondió dentro del tiempo configurado. */
+
         TIEMPO_AGOTADO,
-        /** El proxy ya fue cerrado por el frontend. */
+
         CERRADO,
-        /** El hilo que esperaba la respuesta fue interrumpido. */
+
         INTERRUMPIDA,
-        /** El servidor devolvió un mensaje con un tipo inesperado. */
+
         RESPUESTA_INVALIDA
     }
 

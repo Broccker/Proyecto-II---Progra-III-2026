@@ -13,12 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Controlador del módulo de recursos.
- *
- * <p>En cada consulta se traen las categorías (para los filtros y el
- * formulario) y los recursos que cumplen el filtro vigente.</p>
- */
+
 public final class ControladorRecursos {
 
     private static final String[] ENCABEZADOS =
@@ -45,7 +40,7 @@ public final class ControladorRecursos {
         vista.alSeleccionarFila(this::seleccionar);
     }
 
-    /** Carga inicial: categorías y recursos. */
+
     public void cargar() {
         recargar();
     }
@@ -194,7 +189,7 @@ public final class ControladorRecursos {
                 });
     }
 
-    /** Resultado de una consulta: catálogo de categorías y recursos filtrados. */
+
     private record Carga(List<CategoriaRecurso> categorias, List<Recurso> recursos) {
     }
 }

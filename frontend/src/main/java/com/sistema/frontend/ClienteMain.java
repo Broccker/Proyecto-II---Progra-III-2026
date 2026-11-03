@@ -12,16 +12,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-/**
- * Punto de entrada del proceso Frontend (cliente Swing).
- *
- * <p>Abre la conexión con el backend, arranca el {@link ServiceProxy} y
- * entrega el control a {@link ControladorAplicacion}, que muestra el login y,
- * tras autenticar, la ventana principal.</p>
- *
- * <p>Uso: {@code ClienteMain [host] [puerto]}. Sin argumentos toma el destino
- * de {@code frontend.properties} (o de los valores por defecto).</p>
- */
+
 public final class ClienteMain {
 
     private ClienteMain() {
@@ -61,7 +52,7 @@ public final class ClienteMain {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
-            // Se mantiene el look and feel por defecto.
+
         }
     }
 

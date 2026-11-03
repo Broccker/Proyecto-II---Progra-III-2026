@@ -7,7 +7,7 @@
         </encoder>
     </appender>
 
-    <!-- Durante las pruebas solo interesan advertencias y errores. -->
+
     <root level="WARN">
         <appender-ref ref="CONSOLA"/>
     </root>

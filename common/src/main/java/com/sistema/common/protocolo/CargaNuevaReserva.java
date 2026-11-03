@@ -8,17 +8,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Datos de una reserva recién creada que se envían a los demás frontends.
- *
- * @param reservaId  identificador de la reserva
- * @param encargado  nombre del funcionario que la creó
- * @param actividad  actividad reservada
- * @param fecha      día de la reserva
- * @param horaInicio hora desde
- * @param horaFin    hora hasta
- * @param recursos   recursos asignados
- */
+
 public record CargaNuevaReserva(String reservaId, String encargado, String actividad,
                                 LocalDate fecha, LocalTime horaInicio, LocalTime horaFin,
                                 List<Recurso> recursos) implements CargaNotificacion {
@@ -51,9 +41,7 @@ public record CargaNuevaReserva(String reservaId, String encargado, String activ
         recursos = List.copyOf(recursos);
     }
 
-    /**
-     * Construye la carga a partir de una reserva del dominio.
-     */
+
     public static CargaNuevaReserva desde(Reserva reserva) {
         Objects.requireNonNull(reserva, "La reserva es obligatoria.");
         return new CargaNuevaReserva(reserva.getId(),

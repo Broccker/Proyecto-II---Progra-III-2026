@@ -31,14 +31,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 
-/**
- * Panel de alertas de la ventana principal.
- *
- * <p>Vive a la derecha de las pestañas y siempre está visible. Solo muestra el
- * estado de {@link ModeloAlertas}: no consulta al backend ni decide cuándo se
- * descarta una alerta. Los clics en las columnas "Ver" y "Desc." se exponen
- * como acciones para que el controlador las atienda.</p>
- */
+
 public final class PanelAlertas extends JPanel {
 
     private static final String TITULO = "Alertas";
@@ -117,7 +110,7 @@ public final class PanelAlertas extends JPanel {
         return pie;
     }
 
-    /** Vuelca las alertas del modelo en la tabla. */
+
     public void actualizar() {
         List<Alerta> alertas = modelo.getAlertas();
         tablaModelo.vaciar();
@@ -133,7 +126,7 @@ public final class PanelAlertas extends JPanel {
         }
     }
 
-    /** Abre el detalle de la alerta en un diálogo modal. */
+
     public void mostrarDetalle(Alerta alerta) {
         String detalle = textoDetalle(alerta);
         if (GraphicsEnvironment.isHeadless()) {
@@ -161,7 +154,7 @@ public final class PanelAlertas extends JPanel {
                 alerta.horaFin().format(FORMATO_HORA));
         agregarCampo(contenido, restricciones, 4, "Recursos:", alerta.textoRecursos());
 
-        JButton aceptar = new JButton("OK");
+        JButton aceptar = new JButton("Aceptar");
         aceptar.addActionListener(evento -> dialogo.dispose());
         JPanel pie = new JPanel();
         pie.add(aceptar);
@@ -178,32 +171,24 @@ public final class PanelAlertas extends JPanel {
         dialogo.setVisible(true);
     }
 
-    /**
-     * Pide confirmación para descartar una alerta. El descarte es local: no se
-     * envía ninguna petición al backend.
-     */
+
     public boolean confirmarDescarte(Alerta alerta) {
         return Dialogos.confirmar(this, "¿Descartar?",
                 "¿Descartar la alerta de la actividad \"" + alerta.actividad() + "\"?");
     }
 
-    /**
-     * Informa en el pie del panel que se perdió la conexión con el backend.
-     *
-     * <p>El diálogo lo muestra {@code ControladorConexion}, que es quien
-     * ofrece la reconexión; así no aparecen dos avisos por el mismo corte.</p>
-     */
+
     public void mostrarDesconexion(String mensaje) {
         estadoConexion.setText("Sin conexión con el servidor.");
         estadoConexion.setToolTipText(mensaje);
     }
 
-    /** Restablece el estado del panel cuando la conexión vuelve. */
+
     public void mostrarConexion() {
         actualizar();
     }
 
-    /** Texto del detalle, reutilizado por el diálogo y por las pruebas. */
+
     public static String textoDetalle(Alerta alerta) {
         return "Encargado: " + alerta.encargado()
                 + "\nFecha: " + alerta.fecha().format(SelectorFecha.FORMATO)
@@ -238,7 +223,7 @@ public final class PanelAlertas extends JPanel {
         return estadoConexion;
     }
 
-    /** Renderer que dibuja un icono en la celda, con texto si falta el icono. */
+
     private static final class RendererIcono extends DefaultTableCellRenderer {
 
         private final Icon icono;

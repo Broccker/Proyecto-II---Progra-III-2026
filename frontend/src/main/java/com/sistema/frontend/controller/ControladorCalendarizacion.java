@@ -15,13 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Controlador de la calendarización diaria por categoría.
- *
- * <p>Primero trae las categorías; después construye la matriz de ocupación de
- * la categoría y la fecha elegidas. La matriz la calcula el backend a partir
- * de las reservas vigentes.</p>
- */
+
 public final class ControladorCalendarizacion {
 
     private final Service servicio;
@@ -40,7 +34,7 @@ public final class ControladorCalendarizacion {
         vista.alImprimir(this::imprimir);
     }
 
-    /** Carga las categorías y, si hay alguna, la matriz del día actual. */
+
     public void cargar() {
         vista.habilitar(false);
         AtomicReference<List<CategoriaRecurso>> resultado = new AtomicReference<>();
@@ -60,7 +54,7 @@ public final class ControladorCalendarizacion {
                 });
     }
 
-    /** Construye la matriz de la categoría y fecha seleccionadas. */
+
     void consultar() {
         String categoriaId = vista.getCategoriaId();
         if (categoriaId == null) {

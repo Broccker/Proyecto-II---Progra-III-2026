@@ -26,9 +26,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
-/**
- * Vista de la programación semanal de actividades (24 horas por 7 días).
- */
+
 public final class VistaActividades extends JPanel {
 
     private static final String TITULO = "Actividades";
@@ -106,7 +104,7 @@ public final class VistaActividades extends JPanel {
         return botones;
     }
 
-    /** Vuelca la matriz del modelo en la tabla, si existe. */
+
     public void actualizar() {
         MatrizActividades matriz = modelo.getMatriz();
         if (matriz != null) {
@@ -139,7 +137,7 @@ public final class VistaActividades extends JPanel {
         campoFecha.setFecha(fecha);
     }
 
-    /** Pide el destino del PDF; {@code null} si el usuario canceló. */
+
     public Path elegirDestinoPdf(String nombreSugerido) {
         return SelectorArchivoPdf.elegir(this, nombreSugerido);
     }

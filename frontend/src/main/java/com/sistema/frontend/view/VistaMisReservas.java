@@ -17,9 +17,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
-/**
- * Historial de reservas del funcionario, con cancelación y exportación a PDF.
- */
+
 public final class VistaMisReservas extends JPanel {
 
     private static final String TITULO = "Mis reservas";
@@ -71,7 +69,7 @@ public final class VistaMisReservas extends JPanel {
         actualizar();
     }
 
-    /** Vuelca las reservas del modelo en la tabla. */
+
     public void actualizar() {
         actualizando = true;
         List<Reserva> reservas = modelo.getReservas();
@@ -109,7 +107,7 @@ public final class VistaMisReservas extends JPanel {
                 "¿Desea cancelar la reserva " + id + "?");
     }
 
-    /** Pide el destino del PDF; {@code null} si el usuario canceló. */
+
     public Path elegirDestinoPdf(String nombreSugerido) {
         return SelectorArchivoPdf.elegir(this, nombreSugerido);
     }

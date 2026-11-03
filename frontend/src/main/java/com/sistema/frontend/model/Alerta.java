@@ -7,13 +7,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Alerta local de una reserva creada por otro usuario.
- *
- * <p>Es un valor inmutable: se construye a partir de la carga de la
- * {@code Notificacion} y no se persiste. Vive solo en memoria mientras dure la
- * sesión.</p>
- */
+
 public record Alerta(String reservaId, String encargado, String actividad,
                      LocalDate fecha, LocalTime horaInicio, LocalTime horaFin,
                      List<Recurso> recursos) {
@@ -28,19 +22,19 @@ public record Alerta(String reservaId, String encargado, String actividad,
         recursos = List.copyOf(recursos);
     }
 
-    /** Construye la alerta con los datos que envió el backend. */
+
     public static Alerta desde(CargaNuevaReserva carga) {
         Objects.requireNonNull(carga, "La carga de la notificación es obligatoria.");
         return new Alerta(carga.reservaId(), carga.encargado(), carga.actividad(),
                 carga.fecha(), carga.horaInicio(), carga.horaFin(), carga.recursos());
     }
 
-    /** Texto de la columna Actividad: {@code Encargado - Nombre actividad}. */
+
     public String textoActividad() {
         return encargado + " - " + actividad;
     }
 
-    /** Descripciones de los recursos separadas por coma. */
+
     public String textoRecursos() {
         return recursos.stream()
                 .map(Recurso::getDescripcion)

@@ -81,7 +81,7 @@ class DespachadorTest {
                 DatosPrueba.ID_CATEGORIA, null, "Salas"));
         verify(servicio).modificarCategoria(DatosPrueba.ID_CATEGORIA, null, "Salas");
 
-        // El filtro "Todas las categorías" viaja como nulo; debe aceptarse.
+
         despachador.ejecutar(Solicitud.de(Operacion.FILTRAR_RECURSOS, null, "Proyector"));
         verify(servicio).filtrarRecursos(null, "Proyector");
     }

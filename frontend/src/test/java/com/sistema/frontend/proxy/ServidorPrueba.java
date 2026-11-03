@@ -19,24 +19,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 
-/**
- * Servidor de prueba que habla el mismo protocolo que el backend real.
- *
- * <p>Escucha en un puerto libre, atiende a cada cliente en un hilo virtual y
- * responde con el resultado que devuelve el {@link Comportamiento} inyectado.
- * Las respuestas se envían desde un hilo por petición, de modo que pueden
- * llegar en un orden distinto al de las solicitudes y así se comprueba que el
- * proxy las empareja por identificador de correlación.</p>
- *
- * <p>No depende del módulo {@code backend}: solo usa las clases de
- * {@code common}, igual que haría un doble de prueba.</p>
- */
+
 final class ServidorPrueba implements AutoCloseable {
 
-    /**
-     * Calcula el resultado de una solicitud. Si lanza una excepción de
-     * dominio, se devuelve como {@link Respuesta} fallida.
-     */
+
     interface Comportamiento {
         Object responder(Solicitud solicitud) throws Exception;
     }
@@ -87,19 +73,14 @@ final class ServidorPrueba implements AutoCloseable {
                 "No llegaron " + cantidad + " solicitudes al servidor de prueba.");
     }
 
-    /**
-     * Envía una notificación a todos los clientes conectados.
-     */
+
     void difundir(Notificacion notificacion) throws IOException {
         for (Conexion conexion : conexiones) {
             conexion.enviar(notificacion);
         }
     }
 
-    /**
-     * Envía una notificación a un cliente concreto, por orden de conexión.
-     * Sirve para simular que el servidor excluye al creador de la reserva.
-     */
+
     void enviarA(int indice, Notificacion notificacion) throws IOException {
         List<Conexion> copia = List.copyOf(conexiones);
         if (indice < 0 || indice >= copia.size()) {
@@ -108,10 +89,7 @@ final class ServidorPrueba implements AutoCloseable {
         copia.get(indice).enviar(notificacion);
     }
 
-    /**
-     * Cierra las conexiones activas sin detener el servidor, para simular una
-     * caída de la red.
-     */
+
     void cerrarConexiones() {
         for (Conexion conexion : conexiones) {
             conexion.close();
@@ -164,7 +142,7 @@ final class ServidorPrueba implements AutoCloseable {
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            // El cliente cerró la conexión o la prueba terminó.
+
         } finally {
             if (conexion != null) {
                 conexiones.remove(conexion);
@@ -183,7 +161,7 @@ final class ServidorPrueba implements AutoCloseable {
             try {
                 conexion.enviar(Respuesta.error(solicitud.id(), e));
             } catch (IOException ignorado) {
-                // La conexión ya no existe; no hay a quién responder.
+
             }
         }
     }
@@ -210,7 +188,7 @@ final class ServidorPrueba implements AutoCloseable {
         try {
             socket.close();
         } catch (IOException e) {
-            // El socket de prueba ya estaba cerrado.
+
         }
     }
 
@@ -218,13 +196,11 @@ final class ServidorPrueba implements AutoCloseable {
         try {
             socket.close();
         } catch (IOException e) {
-            // El socket de prueba ya estaba cerrado.
+
         }
     }
 
-    /**
-     * Conexión de un cliente de prueba, con escrituras sincronizadas.
-     */
+
     private static final class Conexion implements AutoCloseable {
 
         private final Socket socket;

@@ -29,14 +29,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/**
- * Prueba de punta a punta del servidor con el {@link ServiceImpl} real y MySQL.
- *
- * <p>Dos clientes por socket: uno crea una reserva que realmente se guarda en
- * la base de pruebas y el otro recibe la notificación. El creador no debe
- * recibirla. Si MySQL no está disponible, la prueba se omite igual que el
- * resto de las pruebas de integración.</p>
- */
+
 @Timeout(25)
 class ServidorReservasIT extends PruebaBDBase {
 
@@ -65,7 +58,7 @@ class ServidorReservasIT extends PruebaBDBase {
             try {
                 cliente.close();
             } catch (IOException e) {
-                // El servidor pudo haber cerrado ya la conexión.
+
             }
         }
         if (servidor != null) {

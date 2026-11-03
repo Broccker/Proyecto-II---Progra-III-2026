@@ -12,12 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Controlador del módulo de categorías de recursos.
- *
- * <p>El identificador de una categoría nueva lo asigna el backend; al
- * modificar se puede cambiar y el servidor actualiza las referencias.</p>
- */
+
 public final class ControladorCategorias {
 
     private static final String[] ENCABEZADOS = {"Identificador", "Descripción"};
@@ -42,7 +37,7 @@ public final class ControladorCategorias {
         vista.alSeleccionarFila(this::seleccionar);
     }
 
-    /** Carga inicial del listado. */
+
     public void cargar() {
         buscar();
     }

@@ -7,17 +7,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-/**
- * Pool de conexiones a MySQL basado en <strong>HikariCP</strong>.
- *
- * <p>Se eligió HikariCP en lugar de un pool propio porque es la implementación
- * recomendada para JDBC: reutiliza conexiones, valida que sigan vivas, limita
- * el número máximo de conexiones y evita el costo de abrir una conexión nueva
- * en cada operación. Es una dependencia pequeña y de configuración mínima.</p>
- *
- * <p>Todos los DAOs reciben una instancia de esta clase; así el backend es el
- * único módulo que conoce el driver de MySQL.</p>
- */
+
 public final class FuenteDatos implements AutoCloseable {
 
     private static final int TIEMPO_ESPERA_MS = 10_000;
@@ -38,11 +28,7 @@ public final class FuenteDatos implements AutoCloseable {
         this.pool = new HikariDataSource(hikari);
     }
 
-    /**
-     * Obtiene una conexión del pool. Quien la recibe debe cerrarla
-     * (preferiblemente con {@code try-with-resources}); cerrarla la devuelve
-     * al pool, no la destruye.
-     */
+
     public Connection conectar() {
         try {
             return pool.getConnection();

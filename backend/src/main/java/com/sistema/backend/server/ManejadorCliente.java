@@ -16,21 +16,12 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Atiende a un cliente durante toda su conexión.
- *
- * <p>Se ejecuta en su propio hilo (virtual) y hace un bucle:
- * leer {@link Solicitud}, ejecutarla con el {@link Despachador}, escribir la
- * {@link Respuesta} con el mismo identificador de correlación y, si se creó
- * una reserva, difundir la {@link Notificacion} a los demás clientes. Al
- * desconectarse el cliente, o ante un error de escritura, se elimina del
- * registro y se cierra el socket.</p>
- */
+
 public final class ManejadorCliente implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(ManejadorCliente.class);
 
-    /** Tiempo máximo para completar el saludo inicial del protocolo. */
+
     private static final int TIEMPO_SALUDO_MS = 10_000;
 
     private final Socket socket;

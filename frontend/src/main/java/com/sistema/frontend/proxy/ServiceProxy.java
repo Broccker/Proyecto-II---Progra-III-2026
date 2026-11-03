@@ -34,27 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Implementación de {@link Service} que habla con el backend por sockets.
- *
- * <p>Es el único punto del frontend que conoce el protocolo. Los
- * controladores reciben un {@code Service} por inyección y no distinguen este
- * proxy de una implementación local.</p>
- *
- * <p>Por cada llamada se crea una {@link Solicitud} con un identificador de
- * correlación nuevo y se registra un {@link CompletableFuture} a la espera de
- * la {@link Respuesta}. Un hilo lector dedicado recibe los mensajes y los
- * separa:</p>
- * <ul>
- *   <li>la respuesta se entrega al futuro que coincide con su id;</li>
- *   <li>la notificación se reenvía a las {@link EscuchaNotificaciones}
- *       registradas (Fase 9).</li>
- * </ul>
- *
- * <p>Las llamadas son bloqueantes desde el punto de vista de quien las hace;
- * en Swing deben ejecutarse fuera del hilo de eventos (por ejemplo, con
- * {@code SwingWorker}).</p>
- */
+
 public final class ServiceProxy implements Service, FuenteNotificaciones, Reconectable,
         AutoCloseable {
 
@@ -74,54 +54,38 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
     private volatile Thread hiloLector;
     private volatile Throwable causaDeCorte;
 
-    /**
-     * Abre la conexión con el backend y arranca el hilo lector.
-     *
-     * @throws ExcepcionRed si el servidor no está disponible o el protocolo
-     *         no arranca
-     */
+
     public ServiceProxy(ConfiguracionFrontend configuracion) {
         this.configuracion = Objects.requireNonNull(configuracion,
                 "La configuración del frontend es obligatoria.");
         abrirConexion();
     }
 
-    /**
-     * Configuración con la que se abrió esta conexión.
-     */
+
     public ConfiguracionFrontend configuracion() {
         return configuracion;
     }
 
-    /**
-     * Registra un receptor de notificaciones. Es seguro llamarlo desde el
-     * hilo de la interfaz mientras otro hilo difunde.
-     */
+
     @Override
     public void agregarEscucha(EscuchaNotificaciones escucha) {
         Objects.requireNonNull(escucha, "La escucha es obligatoria.");
         escuchas.add(escucha);
     }
 
-    /**
-     * Quita un receptor previamente registrado.
-     */
+
     @Override
     public void quitarEscucha(EscuchaNotificaciones escucha) {
         escuchas.remove(escucha);
     }
 
-    /**
-     * Indica si la conexión sigue abierta y utilizable.
-     */
+
     @Override
     public boolean estaConectado() {
         return !cerrado.get() && conectado.get();
     }
 
-    /**
-     * Cierra la conexión y falla las peticiones pendientes. Es idempotente.
-     */
+
     @Override
     public void close() {
         synchronized (bloqueoConexion) {
@@ -132,16 +96,7 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
         }
     }
 
-    /**
-     * Reemplaza la conexión actual por una nueva con el mismo host y puerto.
-     *
-     * <p>Se usa cuando el backend se recuperó después de una caída. Mientras
-     * dura la reconexión el proxy rechaza peticiones; las escuchas registradas
-     * se conservan. Si el servidor sigue apagado, el proxy queda desconectado
-     * y se puede volver a intentar.</p>
-     *
-     * @throws ExcepcionRed si no se puede abrir la nueva conexión
-     */
+
     @Override
     public void reconectar() {
         synchronized (bloqueoConexion) {
@@ -159,9 +114,7 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
         }
     }
 
-    /**
-     * Abre el socket, arranca el lector y deja el proxy disponible.
-     */
+
     private void abrirConexion() {
         ConexionServidor nueva;
         try {
@@ -180,11 +133,7 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
                 .start(lector);
     }
 
-    /**
-     * Invalida la generación actual, falla lo pendiente y cierra el socket.
-     * El incremento de generación evita que un lector viejo marque como caída
-     * la conexión nueva después de una reconexión.
-     */
+
     private void cerrarConexionActual(Throwable causaPendientes) {
         generacion.incrementAndGet();
         conectado.set(false);
@@ -212,9 +161,6 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
         hiloLector = null;
     }
 
-    // ------------------------------------------------------------------
-    // Sesión
-    // ------------------------------------------------------------------
 
     @Override
     public Usuario iniciarSesion(String id, String clave) {
@@ -227,9 +173,6 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
         invocar(Operacion.CAMBIAR_CLAVE, id, claveActual, nuevaClave, confirmacion);
     }
 
-    // ------------------------------------------------------------------
-    // Funcionarios
-    // ------------------------------------------------------------------
 
     @Override
     public void altaFuncionario(String id, String nombre, String telefono) {
@@ -256,9 +199,6 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
         return lista(invocar(Operacion.BUSCAR_FUNCIONARIOS, criterio), Funcionario.class);
     }
 
-    // ------------------------------------------------------------------
-    // Categorías de recursos
-    // ------------------------------------------------------------------
 
     @Override
     public CategoriaRecurso altaCategoria(String descripcion) {
@@ -295,9 +235,6 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
                 "Se esperaba un booleano y llegó " + tipoDe(resultado) + ".");
     }
 
-    // ------------------------------------------------------------------
-    // Recursos
-    // ------------------------------------------------------------------
 
     @Override
     public void altaRecurso(String id, String categoriaId, String descripcion) {
@@ -331,9 +268,6 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
                 Recurso.class);
     }
 
-    // ------------------------------------------------------------------
-    // Reservas
-    // ------------------------------------------------------------------
 
     @Override
     public Reserva crearReserva(String funcionarioId, String actividad, LocalDate fecha,
@@ -364,9 +298,6 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
                 Reserva.class);
     }
 
-    // ------------------------------------------------------------------
-    // Actividades y calendarización
-    // ------------------------------------------------------------------
 
     @Override
     public MatrizActividades construirMatrizActividades(LocalDate fecha) {
@@ -381,9 +312,6 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
                 MatrizCalendarizacion.class);
     }
 
-    // ------------------------------------------------------------------
-    // Estadísticas
-    // ------------------------------------------------------------------
 
     @Override
     public List<ConteoCategoria> categoriasReservadas(LocalDate desde, LocalDate hasta) {
@@ -397,9 +325,6 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
                 ConteoSemana.class);
     }
 
-    // ------------------------------------------------------------------
-    // Extracción con IA
-    // ------------------------------------------------------------------
 
     @Override
     public DatosReservaSugerida extraerDatosReserva(String frase) {
@@ -407,9 +332,6 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
                 DatosReservaSugerida.class);
     }
 
-    // ------------------------------------------------------------------
-    // Transporte
-    // ------------------------------------------------------------------
 
     private Object invocar(Operacion operacion, Object... parametros) {
         Objects.requireNonNull(operacion, "La operación es obligatoria.");
@@ -467,13 +389,7 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
         }
     }
 
-    /**
-     * Falla las peticiones pendientes y avisa a las escuchas, una sola vez.
-     *
-     * <p>Solo se atiende el corte de la generación vigente: un lector viejo
-     * que termina después de una reconexión no debe marcar como caída la
-     * conexión nueva.</p>
-     */
+
     private void perderConexion(Throwable causa, long generacionAfectada) {
         if (generacion.get() != generacionAfectada) {
             return;
@@ -542,9 +458,7 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
         return valor == null ? "null" : valor.getClass().getSimpleName();
     }
 
-    /**
-     * Receptor que el hilo lector invoca para entregar cada mensaje.
-     */
+
     private final class Receptor implements LectorMensajes.Receptor {
 
         private final long generacionDeLaConexion;
@@ -557,7 +471,7 @@ public final class ServiceProxy implements Service, FuenteNotificaciones, Recone
         public void alRecibirRespuesta(Respuesta respuesta) {
             CompletableFuture<Respuesta> espera = pendientes.remove(respuesta.id());
             if (espera == null) {
-                // Puede ser una respuesta que llegó después del timeout.
+
                 LOG.fine(() -> "Respuesta sin petición pendiente: " + respuesta.id());
                 return;
             }

@@ -8,13 +8,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Datos de reserva sugeridos por el servicio de IA.
- *
- * <p>Las categorías ya vienen resueltas contra las que existen en el sistema.
- * Los nombres que la IA propuso pero no existen quedan en
- * {@code categoriasNoEncontradas} para que la vista avise al usuario.</p>
- */
+
 public record DatosReservaSugerida(String actividad, LocalDate fecha, LocalTime horaInicio,
                                    LocalTime horaFin, List<CategoriaRecurso> categorias,
                                    List<String> categoriasNoEncontradas) implements Serializable {

@@ -4,13 +4,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import javax.swing.SwingWorker;
 
-/**
- * Implementación de {@link EjecutorTareas} basada en {@link SwingWorker}.
- *
- * <p>{@code doInBackground} corre en un hilo de trabajo y {@code done} en el
- * hilo de eventos, de modo que la interfaz nunca se congela mientras el proxy
- * espera la respuesta del backend.</p>
- */
+
 public final class EjecutorSwing implements EjecutorTareas {
 
     @Override

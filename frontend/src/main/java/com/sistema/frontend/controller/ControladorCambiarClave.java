@@ -5,13 +5,7 @@ import com.sistema.frontend.util.Validaciones;
 import com.sistema.frontend.view.VistaCambiarClave;
 import java.util.Objects;
 
-/**
- * Controlador del cambio de clave.
- *
- * <p>La confirmación se compara en el frontend para dar respuesta inmediata,
- * pero la longitud y la fortaleza se siguen validando en el backend. La vista
- * no decide nada: solo entrega los textos escritos.</p>
- */
+
 public final class ControladorCambiarClave {
 
     private final Service servicio;
@@ -31,7 +25,7 @@ public final class ControladorCambiarClave {
         vista.alCancelar(this::cancelar);
     }
 
-    /** Valida los campos y solicita el cambio al backend. */
+
     void aceptar() {
         String id;
         String actual;
@@ -74,12 +68,12 @@ public final class ControladorCambiarClave {
         alCancelar.run();
     }
 
-    /** Acción tras un cambio exitoso (normalmente cerrar el diálogo). */
+
     public void alTerminar(Runnable accion) {
         alTerminar = accion == null ? () -> { } : accion;
     }
 
-    /** Acción del botón Cancelar. */
+
     public void alCancelar(Runnable accion) {
         alCancelar = accion == null ? () -> { } : accion;
     }

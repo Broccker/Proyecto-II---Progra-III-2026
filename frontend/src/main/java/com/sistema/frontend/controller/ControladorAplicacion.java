@@ -14,13 +14,7 @@ import java.util.Objects;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 
-/**
- * Orquesta el ciclo de vida de la aplicación de escritorio: login, ventana
- * principal, cambio de clave, cierre de sesión y salida.
- *
- * <p>Es el único lugar que crea ventanas. Los controladores de módulo reciben
- * vistas ya construidas y permanecen ajenos a los marcos.</p>
- */
+
 public final class ControladorAplicacion {
 
     private final Service servicio;
@@ -40,10 +34,7 @@ public final class ControladorAplicacion {
                 conexion instanceof Reconectable reconectable ? reconectable : null);
     }
 
-    /**
-     * @param reconectable origen de conexión que se puede reabrir; si es
-     *                     {@code null} no se ofrece reconexión
-     */
+
     public ControladorAplicacion(Service servicio, EjecutorTareas ejecutor,
                                  AutoCloseable conexion,
                                  FuenteNotificaciones notificaciones,
@@ -62,7 +53,7 @@ public final class ControladorAplicacion {
         }
     }
 
-    /** Punto de entrada de la interfaz; debe invocarse en el hilo de eventos. */
+
     public void iniciar() {
         mostrarLogin();
     }
@@ -103,12 +94,7 @@ public final class ControladorAplicacion {
         principal.mostrar();
     }
 
-    /**
-     * Abre el diálogo modal de cambio de clave.
-     *
-     * @param id         identificador inicial
-     * @param editable   si el usuario puede escribir otro identificador
-     */
+
     public void abrirCambioClave(String id, boolean editable) {
         VistaCambiarClave vista = new VistaCambiarClave(id, editable);
         ControladorCambiarClave controlador =
@@ -147,7 +133,7 @@ public final class ControladorAplicacion {
         }
     }
 
-    /** Cierra ventanas y conexión. Es idempotente. */
+
     public void cerrarTodo() {
         if (controladorConexion != null) {
             notificaciones.quitarEscucha(controladorConexion);
@@ -166,10 +152,7 @@ public final class ControladorAplicacion {
         }
     }
 
-    /**
-     * Deja de escuchar notificaciones y borra las alertas de la sesión. Las
-     * alertas no se persisten: al cerrar sesión se pierden.
-     */
+
     private void descartarAlertas() {
         ControladorPrincipal actual = principal;
         if (actual == null) {

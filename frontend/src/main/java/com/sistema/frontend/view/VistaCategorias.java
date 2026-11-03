@@ -22,12 +22,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
-/**
- * Vista del módulo de categorías de recursos.
- *
- * <p>El identificador se genera en el backend al crear; al modificar se puede
- * cambiar y los recursos asociados se actualizan en el servidor.</p>
- */
+
 public final class VistaCategorias extends JPanel {
 
     private static final String TITULO = "Categorías";
@@ -134,7 +129,7 @@ public final class VistaCategorias extends JPanel {
         return panel;
     }
 
-    /** Vuelca el modelo en la tabla y en el formulario. */
+
     public void actualizar() {
         actualizando = true;
         List<CategoriaRecurso> categorias = modelo.getCategorias();
@@ -147,7 +142,7 @@ public final class VistaCategorias extends JPanel {
         mostrarSeleccion();
     }
 
-    /** Refleja en el formulario la categoría seleccionada. */
+
     public void mostrarSeleccion() {
         CategoriaRecurso seleccionada = modelo.getSeleccionada();
         if (seleccionada == null) {
@@ -212,7 +207,7 @@ public final class VistaCategorias extends JPanel {
         tabla.setEnabled(habilitado);
     }
 
-    /** Pide el destino del PDF; {@code null} si el usuario canceló. */
+
     public Path elegirDestinoPdf(String nombreSugerido) {
         return SelectorArchivoPdf.elegir(this, nombreSugerido);
     }

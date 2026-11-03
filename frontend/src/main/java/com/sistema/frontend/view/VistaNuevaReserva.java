@@ -24,9 +24,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
-/**
- * Formulario de alta de una reserva, con extracción de datos mediante IA.
- */
+
 public final class VistaNuevaReserva extends JPanel {
 
     private static final String TITULO = "Nueva reserva";
@@ -125,7 +123,7 @@ public final class VistaNuevaReserva extends JPanel {
         return botones;
     }
 
-    /** Vuelca las categorías del modelo conservando la selección actual. */
+
     public void actualizar() {
         List<String> seleccionadas = getIdsCategoriasSeleccionadas();
         modeloCategorias.clear();
@@ -192,7 +190,7 @@ public final class VistaNuevaReserva extends JPanel {
         campoHoraFin.setHora(fin);
     }
 
-    /** Rellena el formulario con los datos sugeridos por la IA. */
+
     public void rellenar(DatosReservaSugerida datos) {
         establecerActividad(datos.actividad());
         establecerFecha(datos.fecha());

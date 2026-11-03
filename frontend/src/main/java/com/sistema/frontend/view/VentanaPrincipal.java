@@ -17,13 +17,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JTabbedPane;
 
-/**
- * Ventana principal del sistema.
- *
- * <p>Recibe las pestañas que arma el controlador; no crea controladores ni
- * conoce el backend. Las acciones del menú se exponen como {@link Runnable}
- * para que el controlador las conecte.</p>
- */
+
 public final class VentanaPrincipal extends JFrame {
 
     private final JTabbedPane pestanas = new JTabbedPane();
@@ -85,15 +79,12 @@ public final class VentanaPrincipal extends JFrame {
         return estadoSesion;
     }
 
-    /** Agrega una pestaña con su icono opcional. */
+
     public void agregarPestana(String titulo, String icono, JComponent contenido) {
         pestanas.addTab(titulo, Iconos.pestana(icono), contenido);
     }
 
-    /**
-     * Coloca el panel de alertas al lado derecho, fuera de las pestañas y
-     * siempre visible. Solo puede haber uno.
-     */
+
     public void agregarPanelAlertas(JComponent panel) {
         if (panelAlertas != null) {
             remove(panelAlertas);
@@ -122,12 +113,12 @@ public final class VentanaPrincipal extends JFrame {
         alSalir = accion;
     }
 
-    /** Muestra la ventana en el hilo de eventos de Swing. */
+
     public void mostrar() {
         setVisible(true);
     }
 
-    /** Cierra la ventana sin disparar la acción de salida. */
+
     public void cerrar() {
         dispose();
     }

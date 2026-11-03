@@ -4,10 +4,7 @@ import com.sistema.common.modelo.CategoriaRecurso;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Resuelve los nombres de categoría que propone la IA contra las categorías
- * reales del sistema, sin distinguir mayúsculas ni minúsculas.
- */
+
 public final class MapeoCategorias {
 
     private MapeoCategorias() {

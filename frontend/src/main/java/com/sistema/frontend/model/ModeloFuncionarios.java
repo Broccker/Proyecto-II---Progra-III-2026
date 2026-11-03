@@ -4,10 +4,7 @@ import com.sistema.common.modelo.Funcionario;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Estado del módulo de funcionarios: listado visible, criterio de búsqueda y
- * fila seleccionada.
- */
+
 public final class ModeloFuncionarios {
 
     private List<Funcionario> funcionarios = List.of();

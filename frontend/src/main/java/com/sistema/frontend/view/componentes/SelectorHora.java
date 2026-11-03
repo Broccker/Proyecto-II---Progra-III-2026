@@ -14,10 +14,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
-/**
- * Selector de hora: campo de texto para escribirla y un botón que abre una
- * lista de horas en un menú flotante.
- */
+
 public final class SelectorHora extends JPanel {
 
     private final JTextField campoTexto;
@@ -70,11 +67,7 @@ public final class SelectorHora extends JPanel {
         menu.add(panelLista);
     }
 
-    /**
-     * Devuelve la hora escrita o elegida.
-     *
-     * @throws IllegalArgumentException si el formato no es {@code HH:mm}
-     */
+
     public LocalTime getHora() {
         String texto = campoTexto.getText().trim();
         if (texto.isEmpty()) {
@@ -90,7 +83,7 @@ public final class SelectorHora extends JPanel {
         }
     }
 
-    /** Cambia la hora mostrada. */
+
     public void setHora(LocalTime nueva) {
         if (nueva == null) {
             return;
@@ -108,7 +101,7 @@ public final class SelectorHora extends JPanel {
         try {
             menu.show(botonHora, 0, botonHora.getHeight());
         } catch (RuntimeException ex) {
-            // Sin ventana visible (entornos headless): no hay nada que mostrar.
+
         }
     }
 

@@ -45,9 +45,7 @@ class OperacionTest {
         }
     }
 
-    /**
-     * Convierte {@code listarReservasDe} en {@code LISTAR_RESERVAS_DE}.
-     */
+
     static String aConstante(String metodo) {
         StringBuilder resultado = new StringBuilder(metodo.length() + 4);
         for (int i = 0; i < metodo.length(); i++) {

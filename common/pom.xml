@@ -18,8 +18,5 @@
         Sin dependencias de JDBC ni de Swing.
     </description>
 
-    <!--
-        Este módulo no declara dependencias de compilación a propósito:
-        debe poder usarse tanto desde el backend como desde el frontend.
-    -->
+
 </project>

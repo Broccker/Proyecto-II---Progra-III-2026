@@ -24,19 +24,19 @@
             <artifactId>sistema-common</artifactId>
         </dependency>
 
-        <!-- Gráficos de estadísticas -->
+
         <dependency>
             <groupId>org.jfree</groupId>
             <artifactId>jfreechart</artifactId>
         </dependency>
 
-        <!-- Reportes PDF -->
+
         <dependency>
             <groupId>com.github.librepdf</groupId>
             <artifactId>openpdf</artifactId>
         </dependency>
 
-        <!-- Pruebas de controladores con un Service simulado -->
+
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>

@@ -16,14 +16,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import org.jfree.chart.JFreeChart;
 
-/**
- * Vista de estadísticas con dos paneles: recursos usados por categoría y
- * actividades realizadas por semana.
- *
- * <p>Cada panel tiene su propio rango de fechas, botón de confirmar, tabla y
- * gráfico de barras. Los datos llegan ya agregados por el backend; aquí solo
- * se formatean y se pintan.</p>
- */
+
 public final class VistaEstadisticas extends JPanel {
 
     private static final String TITULO = "Estadísticas";
@@ -60,7 +53,7 @@ public final class VistaEstadisticas extends JPanel {
         actualizar();
     }
 
-    /** Vuelca en ambos paneles los resultados del modelo. */
+
     public void actualizar() {
         List<ConteoCategoria> categorias = modelo.getCategorias();
         panelRecursos.mostrar(
@@ -110,7 +103,7 @@ public final class VistaEstadisticas extends JPanel {
         habilitarActividades(habilitado);
     }
 
-    /** Pide el destino del PDF; {@code null} si el usuario canceló. */
+
     public Path elegirDestinoPdf(String nombreSugerido) {
         return SelectorArchivoPdf.elegir(this, nombreSugerido);
     }

@@ -16,13 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-/**
- * Acceso a la tabla {@code usuarios} (administradores y funcionarios).
- *
- * <p>La clave nunca se devuelve al modelo: solo se expone
- * {@link #buscarClaveHash(String)} para que la capa lógica verifique el hash
- * BCrypt durante el inicio de sesión.</p>
- */
+
 public final class UsuarioDAO extends DAOBase {
 
     private static final String COLUMNAS = "id, clave_hash, rol, nombre, telefono";
@@ -62,10 +56,7 @@ public final class UsuarioDAO extends DAOBase {
         });
     }
 
-    /**
-     * Busca funcionarios por identificador, nombre o teléfono. Un criterio
-     * vacío devuelve todos.
-     */
+
     public List<Funcionario> buscarFuncionarios(String criterio) {
         String patron = "%" + (criterio == null ? "" : criterio.trim()) + "%";
         return enConsulta("buscar funcionarios", conexion -> {
@@ -99,9 +90,7 @@ public final class UsuarioDAO extends DAOBase {
         });
     }
 
-    /**
-     * Devuelve el hash BCrypt del usuario, necesario para validar el login.
-     */
+
     public Optional<String> buscarClaveHash(String id) {
         Objects.requireNonNull(id, "El identificador es obligatorio.");
         return enConsulta("buscar clave de usuario", conexion -> {
@@ -120,12 +109,7 @@ public final class UsuarioDAO extends DAOBase {
         return enConsulta("verificar usuario", conexion -> existe(conexion, id));
     }
 
-    /**
-     * Inserta un usuario con su clave ya hasheada.
-     *
-     * @param usuario usuario a insertar
-     * @param claveHash hash BCrypt de la clave; nunca la clave en texto plano
-     */
+
     public void insertar(Usuario usuario, String claveHash) {
         Objects.requireNonNull(usuario, "El usuario es obligatorio.");
         validarHash(claveHash);
@@ -146,9 +130,7 @@ public final class UsuarioDAO extends DAOBase {
         });
     }
 
-    /**
-     * Actualiza el nombre y el teléfono de un funcionario existente.
-     */
+
     public void actualizarFuncionario(Funcionario funcionario) {
         Objects.requireNonNull(funcionario, "El funcionario es obligatorio.");
         enTransaccion("actualizar funcionario", conexion -> {
@@ -167,9 +149,7 @@ public final class UsuarioDAO extends DAOBase {
         });
     }
 
-    /**
-     * Reemplaza la clave por un nuevo hash BCrypt.
-     */
+
     public void actualizarClave(String id, String nuevaClaveHash) {
         Objects.requireNonNull(id, "El identificador es obligatorio.");
         validarHash(nuevaClaveHash);

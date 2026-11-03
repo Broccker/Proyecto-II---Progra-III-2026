@@ -1,25 +1,11 @@
-# =====================================================================
-# Configuración del Backend (plantilla)
-#
-# Copie este archivo como backend.properties y ajuste los valores.
-# backend.properties está en .gitignore: nunca suba credenciales reales.
-# =====================================================================
-
-# Conexión a MySQL
 bd.url=jdbc:mysql://127.0.0.1:3306/proyectoII_reservas?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
 bd.usuario=root
 bd.clave=root
 
-# Pool de conexiones (HikariCP)
 bd.pool.tamano=10
 
-# Puerto donde escuchará el servidor de sockets (Fase 6)
 servidor.puerto=5000
 
-# Servicio de IA para interpretar frases de reserva (opcional).
-# La clave se queda en el backend y nunca viaja al frontend.
-# Si deja llm.api.url vacío, la función de IA queda deshabilitada con un
-# mensaje claro y el resto del sistema sigue funcionando.
 llm.api.url=https://api.openai.com/v1/chat/completions
 llm.api.key=coloque-aqui-su-clave
 llm.model=gpt-4o-mini

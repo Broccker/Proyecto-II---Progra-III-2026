@@ -3,9 +3,7 @@ package com.sistema.common.modelo;
 import com.sistema.common.excepciones.ValidacionException;
 import java.util.regex.Pattern;
 
-/**
- * Funcionario que puede registrar reservas de recursos.
- */
+
 public class Funcionario extends Usuario {
 
     private static final long serialVersionUID = 1L;

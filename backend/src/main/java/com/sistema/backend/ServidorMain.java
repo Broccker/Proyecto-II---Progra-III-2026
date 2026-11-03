@@ -8,14 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Punto de entrada del proceso Backend (servidor sin interfaz de usuario).
- *
- * <p>Carga la configuración, crea el pool de conexiones y el servicio, abre el
- * puerto configurado y queda esperando peticiones. Un <em>shutdown hook</em>
- * cierra el servidor y el pool aunque el proceso reciba una señal de término,
- * para no dejar sockets ni conexiones a MySQL abiertas.</p>
- */
+
 public final class ServidorMain {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServidorMain.class);

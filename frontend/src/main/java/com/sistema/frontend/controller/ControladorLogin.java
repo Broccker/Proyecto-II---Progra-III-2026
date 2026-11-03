@@ -9,13 +9,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-/**
- * Controlador del ingreso al sistema.
- *
- * <p>Coordina la vista de login, el contrato {@link Service} y el modelo de
- * sesión. La vista solo recoge credenciales; aquí se validan localmente, se
- * consulta al backend fuera del hilo de eventos y se registra el usuario.</p>
- */
+
 public final class ControladorLogin {
 
     private final Service servicio;
@@ -39,7 +33,7 @@ public final class ControladorLogin {
         vista.alSalir(this::salir);
     }
 
-    /** Valida el formulario, autentica y registra la sesión. */
+
     void ingresar() {
         String id;
         String clave;
@@ -78,17 +72,17 @@ public final class ControladorLogin {
         alSalir.run();
     }
 
-    /** Acción a ejecutar cuando el backend acepta las credenciales. */
+
     public void alAutenticar(Consumer<Usuario> accion) {
         alAutenticar = accion == null ? usuario -> { } : accion;
     }
 
-    /** Acción para abrir el cambio de clave desde el login. */
+
     public void alSolicitarCambioClave(Consumer<String> accion) {
         alSolicitarCambioClave = accion == null ? id -> { } : accion;
     }
 
-    /** Acción del botón Salir. */
+
     public void alSalir(Runnable accion) {
         alSalir = accion == null ? () -> { } : accion;
     }

@@ -7,15 +7,7 @@ import com.sistema.frontend.view.Dialogos;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Atiende la caída de la conexión con el backend.
- *
- * <p>Se registra como escucha del proxy. Cuando el socket se corta ofrece
- * reconectar hasta {@value #MAX_INTENTOS} veces; si el usuario declina o el
- * servidor sigue apagado, ejecuta la acción de cierre ordenado de la
- * aplicación. La reconexión corre fuera del hilo de eventos porque abrir un
- * socket puede tardar.</p>
- */
+
 public final class ControladorConexion implements EscuchaNotificaciones {
 
     private static final int MAX_INTENTOS = 3;
@@ -44,7 +36,7 @@ public final class ControladorConexion implements EscuchaNotificaciones {
 
     @Override
     public void alRecibir(Notificacion notificacion) {
-        // Las alertas las procesa ControladorAlertas.
+
     }
 
     @Override
@@ -55,7 +47,7 @@ public final class ControladorConexion implements EscuchaNotificaciones {
         hilo.ejecutar(() -> preguntar(causa, 1));
     }
 
-    /** Acción a ejecutar cuando la conexión vuelve a estar disponible. */
+
     public void alRestablecer(Runnable accion) {
         alRestablecer = accion == null ? () -> { } : accion;
     }

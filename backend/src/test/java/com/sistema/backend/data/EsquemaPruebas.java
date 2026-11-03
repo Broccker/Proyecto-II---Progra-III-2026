@@ -12,14 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Crea la base de pruebas {@code proyectoII_reservas_test} a partir del mismo
- * {@code sql/schema.sql} que se usa en desarrollo.
- *
- * <p>El POM del backend copia {@code sql/schema.sql} a los recursos de prueba,
- * de modo que las pruebas nunca quedan desincronizadas del esquema real. Aquí
- * solo se cambia el nombre de la base.</p>
- */
+
 final class EsquemaPruebas {
 
     static final String BASE_PRUEBAS = "proyectoII_reservas_test";
@@ -55,10 +48,7 @@ final class EsquemaPruebas {
         }
     }
 
-    /**
-     * Quita los comentarios de línea y separa por punto y coma. El esquema no
-     * usa procedimientos ni disparadores, así que esta división es suficiente.
-     */
+
     private static List<String> dividir(String script) {
         String sinComentarios = script.lines()
                 .map(String::strip)
@@ -70,10 +60,7 @@ final class EsquemaPruebas {
                 .toList();
     }
 
-    /**
-     * Convierte {@code jdbc:mysql://host:puerto/base?opciones} en
-     * {@code jdbc:mysql://host:puerto/?opciones} para poder crear la base.
-     */
+
     static String urlSinBase(String url) {
         int inicio = url.indexOf("://");
         int barra = url.indexOf('/', inicio + 3);

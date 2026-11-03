@@ -6,12 +6,7 @@ import java.util.Objects;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-/**
- * Iconos de la interfaz, cargados de los recursos del módulo frontend.
- *
- * <p>Si un icono no está disponible se devuelve {@code null}: los componentes
- * Swing lo aceptan y la aplicación sigue funcionando.</p>
- */
+
 public final class Iconos {
 
     private static final int TAMANO_ICONO_PESTANA = 20;
@@ -21,22 +16,17 @@ public final class Iconos {
     private Iconos() {
     }
 
-    /** Icono para una pestaña. */
+
     public static Icon pestana(String nombre) {
         return cargar(nombre, TAMANO_ICONO_PESTANA);
     }
 
-    /** Icono para un botón. */
+
     public static Icon boton(String nombre) {
         return cargar("botones/" + nombre, TAMANO_ICONO_BOTON);
     }
 
-    /**
-     * Icono de carpeta del sistema para la acción "Ver".
-     *
-     * <p>Lo provee el look and feel; si no estuviera disponible, la vista
-     * muestra el texto "Ver" en su lugar.</p>
-     */
+
     public static Icon carpeta() {
         return javax.swing.UIManager.getIcon("FileView.directoryIcon");
     }

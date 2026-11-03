@@ -27,14 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Acceso a las tablas {@code reservas} y {@code reserva_recursos}.
- *
- * <p>Crear una reserva es una transacción: se bloquean los recursos
- * seleccionados con {@code SELECT ... FOR UPDATE}, se comprueba que no haya
- * traslapes con reservas activas y recién entonces se inserta la reserva y su
- * detalle. Si algo falla no queda ningún dato a medias.</p>
- */
+
 public final class ReservaDAO extends DAOBase {
 
     private static final String PREFIJO_ID = "RES-";
@@ -89,9 +82,7 @@ public final class ReservaDAO extends DAOBase {
         return reservas.isEmpty() ? Optional.empty() : Optional.of(reservas.getFirst());
     }
 
-    /**
-     * Calcula el siguiente identificador con el formato {@code RES-000001}.
-     */
+
     public String siguienteId() {
         return enConsulta("calcular siguiente reserva", conexion -> {
             try (PreparedStatement sentencia = conexion.prepareStatement(
@@ -112,10 +103,7 @@ public final class ReservaDAO extends DAOBase {
         });
     }
 
-    /**
-     * Indica si el recurso aparece en alguna reserva, activa o cancelada.
-     * Se usa para explicar por qué no se puede eliminar.
-     */
+
     public boolean existeRecursoReservado(String recursoId) {
         Objects.requireNonNull(recursoId, "El recurso es obligatorio.");
         return enConsulta("verificar reservas del recurso", conexion -> {
@@ -129,12 +117,7 @@ public final class ReservaDAO extends DAOBase {
         });
     }
 
-    /**
-     * Inserta la reserva y su detalle de recursos de forma atómica.
-     *
-     * @throws ConflictoException si algún recurso ya está reservado en ese
-     *                            horario o si el identificador ya existe
-     */
+
     public void insertar(Reserva reserva) {
         Objects.requireNonNull(reserva, "La reserva es obligatoria.");
         Set<String> idsRecursos = new LinkedHashSet<>();
@@ -196,9 +179,7 @@ public final class ReservaDAO extends DAOBase {
         });
     }
 
-    /**
-     * Elimina la reserva; el detalle se borra en cascada.
-     */
+
     public void eliminar(String id) {
         Objects.requireNonNull(id, "El identificador es obligatorio.");
         enTransaccion("eliminar reserva", conexion -> {
@@ -214,10 +195,7 @@ public final class ReservaDAO extends DAOBase {
         });
     }
 
-    /**
-     * Identificadores de los recursos ocupados por reservas activas que se
-     * traslapan con el horario indicado.
-     */
+
     public Set<String> recursosOcupados(LocalDate fecha, LocalTime horaInicio, LocalTime horaFin) {
         Objects.requireNonNull(fecha, "La fecha es obligatoria.");
         validarHorario(horaInicio, horaFin);
@@ -247,11 +225,7 @@ public final class ReservaDAO extends DAOBase {
         });
     }
 
-    /**
-     * Cantidad de reservas activas por categoría en un rango de fechas.
-     * Cada reserva cuenta una sola vez por categoría, aunque use varios
-     * recursos de esa categoría.
-     */
+
     public List<ConteoCategoria> contarReservasPorCategoria(LocalDate desde, LocalDate hasta) {
         validarRango(desde, hasta);
         return enConsulta("contar reservas por categoría", conexion -> {
@@ -283,10 +257,7 @@ public final class ReservaDAO extends DAOBase {
         });
     }
 
-    /**
-     * Cantidad de actividades (reservas activas) por semana; la semana se
-     * identifica con su lunes.
-     */
+
     public List<ConteoSemana> contarActividadesPorSemana(LocalDate desde, LocalDate hasta) {
         validarRango(desde, hasta);
         return enConsulta("contar actividades por semana", conexion -> {
@@ -374,11 +345,7 @@ public final class ReservaDAO extends DAOBase {
         return recursos;
     }
 
-    /**
-     * Bloquea las filas de los recursos seleccionados hasta que termine la
-     * transacción. Dos reservas simultáneas sobre el mismo recurso se
-     * serializan y la segunda vuelve a comprobar los traslapes.
-     */
+
     private static void bloquearRecursos(Connection conexion, Set<String> idsRecursos)
             throws SQLException {
         String marcadores = String.join(", ", java.util.Collections.nCopies(idsRecursos.size(), "?"));

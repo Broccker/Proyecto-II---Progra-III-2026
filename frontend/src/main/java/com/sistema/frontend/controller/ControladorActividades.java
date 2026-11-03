@@ -13,12 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Controlador de la vista semanal de actividades.
- *
- * <p>La matriz de 24 horas por 7 días la construye el backend a partir de las
- * reservas activas de la semana que contiene la fecha de referencia.</p>
- */
+
 public final class ControladorActividades {
 
     private final Service servicio;
@@ -37,12 +32,12 @@ public final class ControladorActividades {
         vista.alImprimir(this::imprimir);
     }
 
-    /** Carga la semana que contiene la fecha mostrada. */
+
     public void cargar() {
         consultar();
     }
 
-    /** Construye y muestra la matriz de la semana seleccionada. */
+
     void consultar() {
         LocalDate fecha;
         try {

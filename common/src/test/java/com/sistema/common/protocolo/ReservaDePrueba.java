@@ -9,9 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-/**
- * Reserva de ejemplo para las pruebas del protocolo.
- */
+
 final class ReservaDePrueba {
 
     private ReservaDePrueba() {

@@ -14,14 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/**
- * Área de alertas contra un servidor que habla el protocolo real.
- *
- * <p>Simula dos frontends conectados: el servidor envía la notificación solo al
- * que no creó la reserva. Comprueba que la alerta llega al modelo y a la tabla
- * en el hilo de eventos, que ver y descartar no generan tráfico y que la
- * pérdida de conexión se informa en el panel. No requiere MySQL.</p>
- */
+
 @Timeout(30)
 class AlertasIT {
 

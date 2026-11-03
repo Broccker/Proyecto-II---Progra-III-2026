@@ -11,9 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Acceso a la tabla {@code categorias}.
- */
+
 public final class CategoriaRecursoDAO extends DAOBase {
 
     private static final String PREFIJO_ID = "CAT-";
@@ -36,9 +34,7 @@ public final class CategoriaRecursoDAO extends DAOBase {
         });
     }
 
-    /**
-     * Busca por identificador o descripción. Un criterio vacío devuelve todas.
-     */
+
     public List<CategoriaRecurso> buscar(String criterio) {
         String patron = "%" + (criterio == null ? "" : criterio.trim()) + "%";
         return enConsulta("buscar categorías", conexion -> {
@@ -93,10 +89,7 @@ public final class CategoriaRecursoDAO extends DAOBase {
         return existeDescripcion(descripcion, null);
     }
 
-    /**
-     * Indica si otra categoría (distinta de {@code excluirId}) ya usa la
-     * descripción. Se usa al modificar para no chocar consigo misma.
-     */
+
     public boolean existeDescripcion(String descripcion, String excluirId) {
         Objects.requireNonNull(descripcion, "La descripción es obligatoria.");
         return enConsulta("verificar descripción de categoría", conexion -> {
@@ -115,9 +108,7 @@ public final class CategoriaRecursoDAO extends DAOBase {
         });
     }
 
-    /**
-     * Calcula el siguiente identificador con el formato {@code CAT-000001}.
-     */
+
     public String siguienteId() {
         return enConsulta("calcular siguiente categoría", conexion -> {
             try (PreparedStatement sentencia = conexion.prepareStatement(
@@ -147,10 +138,7 @@ public final class CategoriaRecursoDAO extends DAOBase {
         });
     }
 
-    /**
-     * Actualiza identificador y descripción. El identificador puede cambiar:
-     * la clave foránea de {@code recursos} usa {@code ON UPDATE CASCADE}.
-     */
+
     public void actualizar(String idOriginal, CategoriaRecurso categoria) {
         Objects.requireNonNull(idOriginal, "El identificador original es obligatorio.");
         Objects.requireNonNull(categoria, "La categoría es obligatoria.");

@@ -19,20 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Servidor concurrente del backend.
- *
- * <p>Escucha en el puerto configurado, acepta conexiones y entrega cada una a
- * un {@link ManejadorCliente} que corre en su propio hilo virtual. Los hilos
- * virtuales son ideales aquí porque cada cliente pasa la mayor parte del
- * tiempo bloqueado esperando datos del socket: el servidor puede atender
- * muchos frontends con un costo mínimo.</p>
- *
- * <p>El registro de clientes es thread-safe y se usa para difundir las
- * notificaciones. {@link #detener()} cierra primero el socket de aceptación,
- * luego las conexiones activas y por último el ejecutor, de modo que ningún
- * hilo queda bloqueado al terminar el proceso.</p>
- */
+
 public final class Servidor implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Servidor.class);
@@ -51,17 +38,12 @@ public final class Servidor implements AutoCloseable {
     private volatile Thread hiloAceptacion;
     private volatile int puerto;
 
-    /**
-     * Crea un servidor que difunde notificaciones en su propio ejecutor.
-     */
+
     public Servidor(int puerto, Service servicio) {
         this(puerto, servicio, null);
     }
 
-    /**
-     * Constructor para pruebas: permite inyectar el ejecutor del difusor y así
-     * hacer determinista el orden de las notificaciones.
-     */
+
     Servidor(int puerto, Service servicio, Executor difusor) {
         if (puerto < 0 || puerto > 65535) {
             throw new IllegalArgumentException("El puerto debe estar entre 0 y 65535.");
@@ -75,12 +57,7 @@ public final class Servidor implements AutoCloseable {
         this.registro = new RegistroClientes(difusor != null ? difusor : ejecutor);
     }
 
-    /**
-     * Abre el puerto y comienza a aceptar clientes en un hilo dedicado.
-     *
-     * @throws IllegalStateException si el servidor ya está activo, ya fue
-     *         detenido o el puerto no se puede abrir
-     */
+
     public synchronized void iniciar() {
         if (detenido.get()) {
             throw new IllegalStateException("El servidor ya fue detenido.");
@@ -108,31 +85,22 @@ public final class Servidor implements AutoCloseable {
         LOG.info("Servidor escuchando en el puerto {}.", puerto);
     }
 
-    /**
-     * Puerto real en el que escucha el servidor (útil cuando se solicita el 0).
-     */
+
     public int puerto() {
         return puerto;
     }
 
-    /**
-     * Indica si el servidor está aceptando conexiones.
-     */
+
     public boolean estaActivo() {
         return activo.get() && !detenido.get();
     }
 
-    /**
-     * Cantidad de clientes que completaron la conexión y están registrados.
-     */
+
     public int clientesConectados() {
         return registro.cantidad();
     }
 
-    /**
-     * Espera a que termine el bucle de aceptación. Se usa en {@code main} para
-     * mantener vivo el proceso hasta que se cierre el servidor.
-     */
+
     public void esperar() throws InterruptedException {
         Thread hilo = hiloAceptacion;
         if (hilo != null) {
@@ -140,9 +108,7 @@ public final class Servidor implements AutoCloseable {
         }
     }
 
-    /**
-     * Apaga el servidor de forma ordenada. Es idempotente.
-     */
+
     public synchronized void detener() {
         if (!detenido.compareAndSet(false, true)) {
             return;

@@ -8,14 +8,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Socket del frontend con el backend y flujos del protocolo.
- *
- * <p>El flujo de salida se crea y se vacía antes del de entrada, igual que en
- * el servidor, para que ambos extremos intercambien sus cabeceras sin
- * bloquearse. Las escrituras se serializan porque varias peticiones pueden
- * enviarse desde hilos distintos (por ejemplo, dos {@code SwingWorker}).</p>
- */
+
 final class ConexionServidor implements AutoCloseable {
 
     private static final int TIEMPO_CONEXION_MS = 5_000;
@@ -26,11 +19,7 @@ final class ConexionServidor implements AutoCloseable {
     private final Object bloqueoSalida = new Object();
     private final AtomicBoolean cerrada = new AtomicBoolean(false);
 
-    /**
-     * Abre la conexión y prepara los flujos.
-     *
-     * @throws IOException si el host no responde o el protocolo no arranca
-     */
+
     static ConexionServidor abrir(String host, int puerto) throws IOException {
         Socket socket = new Socket();
         try {
@@ -59,10 +48,7 @@ final class ConexionServidor implements AutoCloseable {
         return entrada;
     }
 
-    /**
-     * Escribe un mensaje completo. Varias llamadas concurrentes no mezclan
-     * sus bytes.
-     */
+
     void enviar(Object mensaje) throws IOException {
         synchronized (bloqueoSalida) {
             if (cerrada.get()) {
@@ -87,7 +73,7 @@ final class ConexionServidor implements AutoCloseable {
         try {
             socket.close();
         } catch (IOException e) {
-            // Cerrar un socket ya cerrado no es un error recuperable.
+
         }
     }
 }

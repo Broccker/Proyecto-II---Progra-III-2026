@@ -36,14 +36,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/**
- * Prueba de integración del servidor con dos clientes reales por socket.
- *
- * <p>No usa MySQL: el {@link Service} se simula con Mockito y devuelve una
- * reserva. Así la prueba verifica el transporte, el enrutamiento por
- * operación, la respuesta con el mismo id de correlación y el broadcast
- * selectivo, que es el criterio de aceptación de la Fase 6.</p>
- */
+
 @Timeout(20)
 class ServidorIT {
 
@@ -54,9 +47,8 @@ class ServidorIT {
     @BeforeEach
     void iniciarServidor() {
         servicio = mock(Service.class);
-        // Ejecutor directo: la difusión ocurre dentro del hilo del manejador,
-        // lo que hace determinista la comprobación de que el creador no recibe
-        // su propia notificación.
+
+
         servidor = new Servidor(0, servicio, Runnable::run);
         servidor.iniciar();
     }
@@ -67,7 +59,7 @@ class ServidorIT {
             try {
                 cliente.close();
             } catch (IOException e) {
-                // El servidor pudo haber cerrado ya la conexión.
+
             }
         }
         servidor.detener();

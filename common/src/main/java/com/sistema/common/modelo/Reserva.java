@@ -7,11 +7,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Reserva de uno o varios recursos para una actividad.
- *
- * <p>Es inmutable salvo el estado, que cambia al cancelar la reserva.</p>
- */
+
 public class Reserva implements Serializable {
 
     private static final long serialVersionUID = 1L;

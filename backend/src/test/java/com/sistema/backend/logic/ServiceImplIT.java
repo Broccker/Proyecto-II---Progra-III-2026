@@ -36,12 +36,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/**
- * Pruebas de integración de la capa lógica contra MySQL.
- *
- * <p>Usan la misma base de prueba que los DAO. Si MySQL no está activo se
- * omiten con el mensaje de {@link PruebaBDBase}.</p>
- */
+
 class ServiceImplIT extends PruebaBDBase {
 
     private static final Clock RELOJ =

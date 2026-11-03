@@ -27,14 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Ensambla la ventana principal según el rol del usuario autenticado.
- *
- * <p>El administrador mantiene funcionarios, categorías, recursos y consulta
- * la calendarización, las actividades y las estadísticas; el funcionario crea
- * y cancela sus reservas y consulta las mismas vistas de consulta. Cada
- * pestaña la arma un controlador de módulo con su propio modelo.</p>
- */
+
 public final class ControladorPrincipal {
 
     private final VentanaPrincipal ventana;
@@ -135,7 +128,7 @@ public final class ControladorPrincipal {
         cargas.add(controladorEstadisticas::cargar);
     }
 
-    /** Muestra la ventana y lanza la carga inicial de cada pestaña. */
+
     public void mostrar() {
         ventana.mostrar();
         for (Runnable carga : cargas) {
@@ -143,7 +136,7 @@ public final class ControladorPrincipal {
         }
     }
 
-    /** Cierra la ventana principal sin disparar la acción de salida. */
+
     public void cerrar() {
         ventana.cerrar();
     }
@@ -152,7 +145,7 @@ public final class ControladorPrincipal {
         return ventana;
     }
 
-    /** Controlador que el orquestador registra como escucha del proxy. */
+
     public ControladorAlertas getControladorAlertas() {
         return controladorAlertas;
     }

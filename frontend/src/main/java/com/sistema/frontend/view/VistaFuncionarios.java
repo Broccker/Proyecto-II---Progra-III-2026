@@ -22,12 +22,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
-/**
- * Vista del módulo de funcionarios.
- *
- * <p>Renderiza el {@link ModeloFuncionarios} y notifica las intenciones del
- * usuario mediante acciones; toda la coordinación queda en el controlador.</p>
- */
+
 public final class VistaFuncionarios extends JPanel {
 
     private static final String TITULO = "Funcionarios";
@@ -129,7 +124,7 @@ public final class VistaFuncionarios extends JPanel {
         panel.add(campo, restricciones);
     }
 
-    /** Vuelca el modelo en la tabla y en el formulario. */
+
     public void actualizar() {
         actualizando = true;
         List<Funcionario> funcionarios = modelo.getFuncionarios();
@@ -143,7 +138,7 @@ public final class VistaFuncionarios extends JPanel {
         mostrarSeleccion();
     }
 
-    /** Refleja en el formulario la fila seleccionada del modelo. */
+
     public void mostrarSeleccion() {
         Funcionario seleccionado = modelo.getSeleccionado();
         if (seleccionado == null) {
@@ -213,7 +208,7 @@ public final class VistaFuncionarios extends JPanel {
         tabla.setEnabled(habilitado);
     }
 
-    /** Pide el destino del PDF; {@code null} si el usuario canceló. */
+
     public Path elegirDestinoPdf(String nombreSugerido) {
         return SelectorArchivoPdf.elegir(this, nombreSugerido);
     }

@@ -11,26 +11,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Hilo lector dedicado del proxy.
- *
- * <p>Lee todo lo que llega por el socket y lo separa según su tipo:</p>
- * <ul>
- *   <li>{@link Respuesta}: se entrega al proxy, que la asocia a la petición
- *       que espera por su identificador de correlación.</li>
- *   <li>{@link Notificacion}: se entrega al proxy, que la reenvía a sus
- *       escuchas registradas.</li>
- * </ul>
- *
- * <p>Si el flujo se corta, informa al receptor una sola vez para que falle
- * las peticiones pendientes en lugar de dejarlas esperando hasta el
- * <em>timeout</em>.</p>
- */
+
 final class LectorMensajes implements Runnable {
 
-    /**
-     * Destino de los mensajes leídos.
-     */
+
     interface Receptor {
 
         void alRecibirRespuesta(Respuesta respuesta);
@@ -74,9 +58,7 @@ final class LectorMensajes implements Runnable {
         }
     }
 
-    /**
-     * Pide al hilo que termine. No cierra el socket: eso lo hace el proxy.
-     */
+
     void detener() {
         activo.set(false);
     }

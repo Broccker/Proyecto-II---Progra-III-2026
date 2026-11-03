@@ -18,13 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Controlador de las reservas del funcionario autenticado.
- *
- * <p>Coordina dos vistas sobre un mismo {@link ModeloReservas}: el alta con
- * extracción por IA y el historial con cancelación. Las llamadas de red se
- * ejecutan fuera del hilo de eventos.</p>
- */
+
 public final class ControladorReservas {
 
     private static final String[] ENCABEZADOS =
@@ -62,7 +56,7 @@ public final class ControladorReservas {
         vistaMisReservas.alSeleccionarFila(this::seleccionar);
     }
 
-    /** Carga las categorías para el alta y el historial de reservas. */
+
     public void cargar() {
         vistaNueva.habilitar(false);
         vistaMisReservas.habilitar(false);
@@ -258,7 +252,7 @@ public final class ControladorReservas {
                 .orElse("");
     }
 
-    /** Categorías disponibles y reservas visibles. */
+
     private record Carga(List<CategoriaRecurso> categorias, List<Reserva> reservas) {
     }
 }

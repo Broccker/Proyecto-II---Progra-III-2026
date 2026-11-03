@@ -3,12 +3,7 @@ package com.sistema.common.dto;
 import com.sistema.common.modelo.CategoriaRecurso;
 import java.io.Serializable;
 
-/**
- * Cantidad de reservas activas que usaron recursos de una categoría.
- *
- * @param categoria categoría contabilizada
- * @param cantidad  número de reservas distintas (no de recursos)
- */
+
 public record ConteoCategoria(CategoriaRecurso categoria, long cantidad) implements Serializable {
 
     public ConteoCategoria {

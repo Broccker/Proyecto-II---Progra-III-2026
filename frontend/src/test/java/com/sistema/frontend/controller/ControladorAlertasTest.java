@@ -198,7 +198,7 @@ class ControladorAlertasTest {
         verify(vista).actualizar();
     }
 
-    /** Despachador que retiene las tareas hasta que la prueba las ejecuta. */
+
     private static final class HiloManual implements HiloInterfaz {
 
         private final Deque<Runnable> tareas = new ArrayDeque<>();

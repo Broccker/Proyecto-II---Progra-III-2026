@@ -23,14 +23,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-/**
- * Panel de una estadística: rango de fechas, tabla de resultados y gráfico de
- * barras.
- *
- * <p>No consulta al backend ni calcula nada: recibe las etiquetas y cantidades
- * ya agregadas y se limita a pintarlas. Los botones se exponen al controlador
- * como acciones.</p>
- */
+
 final class PanelEstadistica extends JPanel {
 
     private final String titulo;
@@ -98,7 +91,7 @@ final class PanelEstadistica extends JPanel {
         return division;
     }
 
-    /** Pinta los resultados ya agregados y reconstruye el gráfico de barras. */
+
     void mostrar(List<String> etiquetas, List<Long> cantidades) {
         tablaModelo.vaciar();
         DefaultCategoryDataset datos = new DefaultCategoryDataset();

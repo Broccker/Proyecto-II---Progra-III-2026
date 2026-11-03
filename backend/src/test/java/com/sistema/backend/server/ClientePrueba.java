@@ -9,9 +9,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 
-/**
- * Cliente de prueba que habla exactamente el mismo protocolo que el frontend.
- */
+
 final class ClientePrueba implements AutoCloseable {
 
     private final Socket socket;

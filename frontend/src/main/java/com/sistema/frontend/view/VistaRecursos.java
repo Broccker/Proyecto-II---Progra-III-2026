@@ -24,12 +24,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
-/**
- * Vista del módulo de recursos.
- *
- * <p>Permite filtrar por categoría y descripción, y mantener el formulario de
- * alta o modificación. El estado vive en {@link ModeloRecursos}.</p>
- */
+
 public final class VistaRecursos extends JPanel {
 
     private static final String TITULO = "Recursos";
@@ -143,7 +138,7 @@ public final class VistaRecursos extends JPanel {
         panel.add(campo, restricciones);
     }
 
-    /** Vuelca categorías, filtros, tabla y formulario desde el modelo. */
+
     public void actualizar() {
         actualizando = true;
         String filtroActual = getFiltroCategoriaId();
@@ -176,7 +171,7 @@ public final class VistaRecursos extends JPanel {
         mostrarSeleccion();
     }
 
-    /** Refleja en el formulario el recurso seleccionado. */
+
     public void mostrarSeleccion() {
         Recurso seleccionado = modelo.getSeleccionado();
         if (seleccionado == null) {
@@ -234,7 +229,7 @@ public final class VistaRecursos extends JPanel {
         campoBusqueda.setText(criterio == null ? "" : criterio);
     }
 
-    /** Identificador de la categoría del filtro, o {@code null} para todas. */
+
     public String getFiltroCategoriaId() {
         FiltroCategoria filtro = (FiltroCategoria) comboFiltro.getSelectedItem();
         return filtro == null ? null : filtro.id();
@@ -252,7 +247,7 @@ public final class VistaRecursos extends JPanel {
         return campoDescripcion.getText().trim();
     }
 
-    /** Identificador de la categoría elegida en el formulario. */
+
     public String getCategoriaId() {
         CategoriaRecurso categoria = (CategoriaRecurso) comboCategoria.getSelectedItem();
         return categoria == null ? null : categoria.getId();
@@ -293,7 +288,7 @@ public final class VistaRecursos extends JPanel {
         tabla.setEnabled(habilitado);
     }
 
-    /** Pide el destino del PDF; {@code null} si el usuario canceló. */
+
     public Path elegirDestinoPdf(String nombreSugerido) {
         return SelectorArchivoPdf.elegir(this, nombreSugerido);
     }
@@ -353,7 +348,7 @@ public final class VistaRecursos extends JPanel {
         }
     }
 
-    /** Elemento del filtro; {@code id == null} representa todas las categorías. */
+
     private record FiltroCategoria(String id, String descripcion) {
         @Override
         public String toString() {

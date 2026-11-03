@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-/**
- * Apoyo para las pruebas del protocolo: envía y recibe un mensaje por un
- * arreglo de bytes, usando exactamente los mismos métodos que los sockets.
- */
+
 abstract class PruebaProtocoloBase {
 
     @SuppressWarnings("unchecked")

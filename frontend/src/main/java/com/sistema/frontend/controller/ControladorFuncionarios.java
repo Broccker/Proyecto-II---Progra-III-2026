@@ -12,13 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Controlador del módulo de funcionarios.
- *
- * <p>Une la vista, el modelo del módulo y el backend. La vista expone las
- * intenciones del usuario; aquí se validan, se decide entre alta y
- * modificación y se actualiza el estado compartido.</p>
- */
+
 public final class ControladorFuncionarios {
 
     private static final String[] ENCABEZADOS = {"Identificador", "Nombre", "Teléfono"};
@@ -43,12 +37,12 @@ public final class ControladorFuncionarios {
         vista.alSeleccionarFila(this::seleccionar);
     }
 
-    /** Carga inicial del listado. */
+
     public void cargar() {
         buscar();
     }
 
-    /** Consulta el backend con el criterio escrito en la vista. */
+
     void buscar() {
         String criterio = vista.getCriterio();
         modelo.establecerCriterio(criterio);
@@ -67,7 +61,7 @@ public final class ControladorFuncionarios {
                 });
     }
 
-    /** Crea un funcionario nuevo o guarda los cambios del seleccionado. */
+
     void guardar() {
         String id;
         String nombre;
@@ -108,7 +102,7 @@ public final class ControladorFuncionarios {
                 });
     }
 
-    /** Elimina el funcionario seleccionado, previa confirmación. */
+
     void eliminar() {
         Funcionario seleccionado = modelo.getSeleccionado();
         if (seleccionado == null) {

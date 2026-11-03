@@ -2,10 +2,7 @@ package com.sistema.frontend.controller;
 
 import java.util.function.Consumer;
 
-/**
- * Ejecutor síncrono para las pruebas: el trabajo termina antes de volver del
- * método, igual que si el backend respondiera de inmediato.
- */
+
 final class EjecutorDirecto implements EjecutorTareas {
 
     private int ejecuciones;
