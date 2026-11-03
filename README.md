@@ -35,6 +35,7 @@ eif206-proyecto2/                 (POM padre, packaging=pom)
 │       ├── proxy/                ServiceProxy y transporte por sockets
 │       ├── util/                 Iconos, PDF y reportes
 │       └── view/                 Ventana principal, vistas, panel de alertas y componentes
+├── docs/                         Guía de defensa y reporte de cobertura
 ├── sql/                          schema.sql y datos_iniciales.sql
 ├── .run/                         Run Configurations compartidas de IntelliJ
 └── pom.xml
@@ -53,6 +54,72 @@ eif206-proyecto2/                 (POM padre, packaging=pom)
 * **JDK 26** (el proyecto compila con `release 26`).
 * **Maven 3.9+** (o el Maven incluido en IntelliJ IDEA).
 * **MySQL 8.4 LTS** (el esquema usa `utf8mb4_0900_ai_ci` y restricciones `CHECK`).
+
+## Puesta en marcha
+
+1. **Crear la base de datos** (MySQL 8.4 en ejecución):
+
+   ```bash
+   mysql -u root -p --default-character-set=utf8mb4 < sql/schema.sql
+   mysql -u root -p --default-character-set=utf8mb4 < sql/datos_iniciales.sql
+   ```
+
+2. **Configurar el backend**:
+
+   ```bash
+   cp backend/src/main/resources/backend.properties.example \
+      backend/src/main/resources/backend.properties
+   ```
+
+   Ajuste `bd.url`, `bd.usuario` y `bd.clave`. Si no usará la IA, deje
+   `llm.api.url` vacío; si la usará, complete `llm.api.key`. El archivo real no
+   se versiona.
+
+3. **Compilar**:
+
+   ```bash
+   mvn clean verify
+   ```
+
+4. **Arrancar el backend** (queda escuchando en `servidor.puerto`, 5000 por
+   defecto):
+
+   ```bash
+   mvn -pl backend -am exec:java
+   # o
+   java -jar backend/target/sistema-backend-2.0.0-SNAPSHOT.jar
+   ```
+
+5. **Arrancar el frontend** en otra terminal:
+
+   ```bash
+   mvn -pl frontend -am exec:java
+   # o
+   java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar
+   ```
+
+6. **Ingresar** con `111/111` (administrador) o `222/222` (funcionario).
+
+### Misma máquina o máquinas separadas
+
+* **Misma máquina**: los valores por defecto (`127.0.0.1:5000`) funcionan sin
+  crear `frontend.properties`.
+* **Máquinas separadas**: el backend y MySQL quedan en el equipo servidor; el
+  frontend solo necesita la IP del servidor:
+
+  ```bash
+  # opción 1: argumentos del frontend
+  java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar 192.168.1.20 5000
+
+  # opción 2: frontend.properties
+  servidor.host=192.168.1.20
+  servidor.puerto=5000
+  ```
+
+  Abra el puerto TCP del backend (5000 por defecto) en el cortafuegos del
+  servidor. **El puerto de MySQL no necesita exponerse**: solo lo usa el
+  backend. Puede conectar varios frontends al mismo backend; las alertas se
+  difunden entre todos menos el creador de la reserva.
 
 ## Compilar y probar
 
@@ -879,6 +946,36 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 * `dev`: integración de las fases.
 * `feature/fase-N-descripcion`: una rama por fase o funcionalidad; se integra con Pull Request.
 
+## Entrega (Fase 13)
+
+El entregable es un único archivo comprimido:
+
+**`Proyecto-II-Sistema-Reservas-EIF206.zip`**
+
+Contiene el POM padre, los tres módulos con su código fuente y pruebas, los
+scripts `sql/schema.sql` y `sql/datos_iniciales.sql`, las configuraciones
+`.example`, el `README.md` y la carpeta `docs/`.
+
+Se excluyen deliberadamente:
+
+* `target/` (artefactos de compilación).
+* `.idea/` y archivos de proyecto de IDE.
+* `.git/` (el historial queda en GitHub).
+* `backend.properties` y `frontend.properties` reales, con credenciales.
+* Logs, archivos `.zip` y respaldos.
+
+Para verificar el paquete: descomprímalo en una carpeta limpia, copie
+`backend.properties.example` a `backend.properties`, cargue los scripts SQL y
+ejecute `mvn clean verify`.
+
+Documentación de apoyo:
+
+* [`docs/DEFENSA.md`](docs/DEFENSA.md): arquitectura, flujos, ubicación del
+  Proxy, aislamiento de la base, guion de demostración, preguntas probables y
+  checklist final.
+* [`docs/COBERTURA.md`](docs/COBERTURA.md): pruebas unitarias y de integración
+  por módulo y por criterio de la rúbrica.
+
 ## Estado de las fases
 
 | Fase | Descripción | Estado |
@@ -895,4 +992,4 @@ consultas de estadísticas están en [`sql/README.md`](sql/README.md).
 | 10 | Estadísticas | ✅ Completada |
 | 11 | Validación y errores transversal | ✅ Completada |
 | 12 | Pruebas JUnit 5 | ✅ Completada |
-| 13 | Entrega y defensa | ⏳ Pendiente |
+| 13 | Entrega y defensa | ✅ Completada |
