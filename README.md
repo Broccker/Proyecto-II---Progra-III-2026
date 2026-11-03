@@ -78,23 +78,21 @@ eif206-proyecto2/                 (POM padre, packaging=pom)
 3. **Compilar**:
 
    ```bash
-   mvn clean verify
+   mvn clean verify     # compila, prueba y genera los JAR ejecutables
+   # o, si solo quiere ejecutar sin esperar las pruebas:
+   mvn -DskipTests package
    ```
 
 4. **Arrancar el backend** (queda escuchando en `servidor.puerto`, 5000 por
    defecto):
 
    ```bash
-   mvn -pl backend -am exec:java
-   # o
    java -jar backend/target/sistema-backend-2.0.0-SNAPSHOT.jar
    ```
 
 5. **Arrancar el frontend** en otra terminal:
 
    ```bash
-   mvn -pl frontend -am exec:java
-   # o
    java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar
    ```
 
@@ -149,14 +147,7 @@ mvn -pl backend -am verify
 1. `File → Open` y seleccionar el `pom.xml` de la raíz; importar los tres módulos.
 2. Usar las configuraciones compartidas **Backend** y **Frontend** del menú de ejecución
    (están versionadas en `.run/`).
-3. Alternativa por consola:
-
-```bash
-mvn -pl backend -am exec:java
-mvn -pl frontend -am exec:java
-```
-
-También se generan JAR ejecutables con `mvn package`:
+3. Alternativa por consola, después de `mvn -DskipTests package`:
 
 ```bash
 java -jar backend/target/sistema-backend-2.0.0-SNAPSHOT.jar
@@ -436,8 +427,7 @@ así el servidor puede atender muchos clientes con un costo mínimo.
 Para levantarlo:
 
 ```bash
-mvn -pl backend -am exec:java
-# o, tras mvn package:
+# tras mvn package (o mvn clean verify)
 java -jar backend/target/sistema-backend-2.0.0-SNAPSHOT.jar
 ```
 
@@ -501,11 +491,9 @@ valores por defecto. Las propiedades del sistema `servidor.host`,
 
 ```bash
 # misma máquina, puerto 5000 (por defecto)
-mvn -pl frontend -am exec:java
+java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar
 
 # otro equipo
-mvn -pl frontend -am exec:java -Dexec.args="192.168.1.20 5000"
-# o con el JAR
 java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar 192.168.1.20 5000
 ```
 
@@ -531,7 +519,7 @@ Pruebas de la fase:
   `backend`.
 * `ProxyBackendRealIT`: aceptación de la fase. Inicia sesión (`111/111`) contra
   el backend real. Se omite si no hay un servidor escuchando; para ejecutarla,
-  arranque MySQL y `mvn -pl backend -am exec:java` y luego:
+  arranque MySQL y `java -jar backend/target/sistema-backend-2.0.0-SNAPSHOT.jar` y luego:
 
 ```bash
 mvn -pl frontend -am -Dit.test=ProxyBackendRealIT verify
@@ -610,8 +598,6 @@ devuelve `null` si el recurso no está, sin romper la vista.
 Con el backend escuchando en el puerto 5000 y la base cargada:
 
 ```bash
-mvn -pl frontend -am exec:java
-# o
 java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar
 ```
 
@@ -685,8 +671,8 @@ sesión empieza sin alertas.
 
 ### Probar con dos frontends
 
-1. Arranque MySQL y el backend: `mvn -pl backend -am exec:java`.
-2. Abra dos frontends: `mvn -pl frontend -am exec:java` (dos terminales).
+1. Arranque MySQL y el backend: `java -jar backend/target/sistema-backend-2.0.0-SNAPSHOT.jar`.
+2. Abra dos frontends: `java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar` (dos terminales).
 3. Ingrese en uno con `222/222` y en el otro con `333/333`.
 4. Cree una reserva como `222`; en el frontend de `333` aparece la alerta
    `Ana Pérez - <actividad>` al instante. El de `222` no la recibe.
@@ -853,8 +839,8 @@ detalle.
 
 Para probarlo manualmente:
 
-1. Abra el backend y dos frontends (`mvn -pl backend -am exec:java` y
-   `mvn -pl frontend -am exec:java`).
+1. Abra el backend y dos frontends (`java -jar backend/target/sistema-backend-2.0.0-SNAPSHOT.jar` y
+   `java -jar frontend/target/sistema-frontend-2.0.0-SNAPSHOT.jar`).
 2. Inicie sesión y cree una reserva en un frontend: el otro recibe la alerta.
 3. Detenga el backend (`taskkill /PID <pid> /F`).
 4. En el frontend aparece el diálogo de conexión perdida; elija reintentar. Si
